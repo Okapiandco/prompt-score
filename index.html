@@ -773,12 +773,6 @@
 </head>
 <body>
 
-<div class="share-bar" id="shareBar" style="display:none">
-  <span class="share-label">SHARED BOARD</span>
-  <span class="share-url"></span>
-  <button class="share-copy-btn" onclick="copyShareLink()">COPY LINK</button>
-</div>
-
 <div class="mode-bar">
   <button class="mode-btn active" onclick="setMode('entry')" id="btnEntry">⌨ Enter My Prompt</button>
   <button class="mode-btn" onclick="setMode('board')" id="btnBoard">🏆 Live Leaderboard</button>
@@ -1311,76 +1305,79 @@ const RANKS = [
   { min:950, max:1000, name:"ELITE PROMPTER",   color:"#c8973a" },
 ];
 
-const BLOB_API = 'https://jsonblob.com/api/jsonBlob';
-let blobId = window.location.hash.slice(1) || null;
+// ── SANITY CONFIG ────────────────────────────────────────────────────────
+const SANITY_PROJECT = 'xn0l2bp8';
+const SANITY_DATASET = 'production';
+const SANITY_TOKEN   = 'skcW6ZkjqZLizX1LqRUAGRVFARATB4d0yjRBAZMlmfTLuMhzB6zEUqyef1DIdoZc6GRRPV2vzTSNkg1Pet5iWQSL9kdX6t1sGM7CvL7hS0TddJdSiOQpls72URqxBDnwWD1kgvVuQvcR5GeZ3Fa6LAz9LlqIF5BGOx8WjFI1wHR5ysKHgvYi';
+const SANITY_API     = `https://${SANITY_PROJECT}.api.sanity.io/v2021-06-07`;
+
 let industry = 'sales';
 let selIdx = null;
 let currentScore = null;
 let scoreTimer = null;
 let refreshTimer = null;
 
-// ── STORAGE (jsonblob.com cloud backend) ─────────────────────────────────
+// ── STORAGE (Sanity backend) ─────────────────────────────────────────────
 async function initBoard() {
-  if (blobId) {
-    // Validate existing blob
-    try {
-      const res = await fetch(`${BLOB_API}/${blobId}`, {
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
-      });
-      if (res.ok) { showShareLink(); return; }
-    } catch {}
-  }
-  // Create new blob
+  // Test connection
   try {
-    const res = await fetch(BLOB_API, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify([])
-    });
-    const loc = res.headers.get('Location');
-    blobId = loc.split('/').pop();
-    window.location.hash = blobId;
-    showShareLink();
+    const res = await fetch(
+      `${SANITY_API}/data/query/${SANITY_DATASET}?query=` + encodeURIComponent('count(*[_type=="score"])')
+    );
+    if (res.ok) return;
   } catch(err) {
-    console.error('Failed to create cloud board:', err);
-    showToast('Cloud storage unavailable — using local fallback');
+    console.error('Sanity connection failed:', err);
+    showToast('Cloud board unavailable');
   }
-}
-
-function showShareLink() {
-  const el = document.getElementById('shareBar');
-  if (el) {
-    const url = window.location.href.split('#')[0] + '#' + blobId;
-    el.style.display = 'flex';
-    el.querySelector('.share-url').textContent = url;
-  }
-}
-
-function copyShareLink() {
-  const url = window.location.href.split('#')[0] + '#' + blobId;
-  navigator.clipboard.writeText(url).then(() => showToast('Link copied — share it with participants!'));
 }
 
 async function loadEntries() {
-  if (!blobId) return [];
   try {
-    const res = await fetch(`${BLOB_API}/${blobId}`, {
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
-    });
+    const query = encodeURIComponent('*[_type=="score"] | order(score desc) { name, score, rank, time }');
+    const res = await fetch(`${SANITY_API}/data/query/${SANITY_DATASET}?query=${query}`);
     if (!res.ok) return [];
-    return await res.json();
+    const data = await res.json();
+    return data.result || [];
   } catch { return []; }
 }
 
-async function saveEntries(e) {
-  if (!blobId) return;
-  try {
-    await fetch(`${BLOB_API}/${blobId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify(e)
-    });
-  } catch(err) { console.error('Save failed:', err); }
+async function saveEntry(entry) {
+  const doc = {
+    _type: 'score',
+    name: entry.name,
+    score: entry.score,
+    rank: entry.rank,
+    time: entry.time
+  };
+
+  const mutations = [{ create: doc }];
+
+  const res = await fetch(`${SANITY_API}/data/mutate/${SANITY_DATASET}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${SANITY_TOKEN}`
+    },
+    body: JSON.stringify({ mutations })
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Sanity save failed: ${err}`);
+  }
+  return await res.json();
+}
+
+async function clearAllEntries() {
+  const mutations = [{ delete: { query: '*[_type=="score"]' } }];
+  await fetch(`${SANITY_API}/data/mutate/${SANITY_DATASET}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${SANITY_TOKEN}`
+    },
+    body: JSON.stringify({ mutations })
+  });
 }
 
 // ── HELPERS ────────────────────────────────────────────────────────────────
@@ -1644,16 +1641,22 @@ async function submitScore() {
   const btn = document.getElementById('submitBtn');
   btn.disabled = true; btn.textContent = 'POSTING...';
 
-  const entries = await loadEntries();
-  entries.push({ name, score: currentScore, rank: getRank(currentScore).name, time: Date.now() });
-  await saveEntries(entries);
+  await boardReady;
 
-  document.getElementById('promptCol').style.display = 'none';
-  document.getElementById('successPanel').classList.add('shown');
-  document.getElementById('sucScore').textContent = currentScore;
-  document.getElementById('sucScore').style.color = getRank(currentScore).color;
-  document.getElementById('sucRank').textContent = getRank(currentScore).name;
-  showToast('🏆 On the board!');
+  try {
+    await saveEntry({ name, score: currentScore, rank: getRank(currentScore).name, time: Date.now() });
+
+    document.getElementById('promptCol').style.display = 'none';
+    document.getElementById('successPanel').classList.add('shown');
+    document.getElementById('sucScore').textContent = currentScore;
+    document.getElementById('sucScore').style.color = getRank(currentScore).color;
+    document.getElementById('sucRank').textContent = getRank(currentScore).name;
+    showToast('🏆 On the board!');
+  } catch(err) {
+    console.error('Submit failed:', err);
+    showToast('Failed to post — please try again');
+    btn.disabled = false; btn.textContent = '🏆 POST TO BOARD';
+  }
 }
 
 function resetEntry() {
@@ -1670,6 +1673,7 @@ function resetEntry() {
 
 // ── LEADERBOARD ────────────────────────────────────────────────────────────
 async function renderBoard() {
+  await boardReady;
   const entries = await loadEntries();
   const sorted = [...entries].sort((a,b)=>b.score-a.score);
   const tbody = document.getElementById('boardBody');
@@ -1711,7 +1715,7 @@ async function renderBoard() {
 
 async function clearBoard() {
   if (!confirm('Clear all scores from the leaderboard?')) return;
-  await saveEntries([]);
+  await clearAllEntries();
   renderBoard();
   showToast('Board cleared');
 }
@@ -1744,7 +1748,7 @@ function showToast(msg) {
 }
 
 // ── INIT ───────────────────────────────────────────────────────────────────
-initBoard();
+let boardReady = initBoard();
 renderScenarios();
 
 document.getElementById('promptInput').addEventListener('input', ()=>{
