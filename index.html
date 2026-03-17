@@ -1009,11 +1009,6 @@ const RANKS = [
 ];
 
 // ── SANITY CONFIG ────────────────────────────────────────
-const SANITY_PROJECT = 'xn0l2bp8';
-const SANITY_DATASET = 'production';
-const SANITY_TOKEN   = 'skcW6ZkjqZLizX1LqRUAGRVFARATB4d0yjRBAZMlmfTLuMhzB6zEUqyef1DIdoZc6GRRPV2vzTSNkg1Pet5iWQSL9kdX6t1sGM7CvL7hS0TddJdSiOQpls72URqxBDnwWD1kgvVuQvcR5GeZ3Fa6LAz9LlqIF5BGOx8WjFI1wHR5ysKHgvYi';
-const SANITY_API     = `https://${SANITY_PROJECT}.api.sanity.io/v2021-06-07`;
-
 let industry = 'event_production';
 let selIdx = null;
 let currentStep = 0;
@@ -1021,63 +1016,25 @@ let currentScore = null;
 let scoreTimer = null;
 let refreshTimer = null;
 
-// ── SANITY BACKEND ───────────────────────────────────────
-async function initBoard() {
-  try {
-    const res = await fetch(
-      `${SANITY_API}/data/query/${SANITY_DATASET}?query=` + encodeURIComponent('count(*[_type=="score"])')
-    );
-    if (res.ok) return;
-  } catch(err) {
-    console.error('Sanity connection failed:', err);
-    showToast('Cloud board unavailable — using local storage');
-  }
-}
+// ── LOCAL STORAGE BACKEND ────────────────────────────────
+const STORAGE_KEY = 'prompt_score_board';
 
-async function loadEntries() {
+function initBoard() { /* no-op, localStorage is always ready */ }
+
+function loadEntries() {
   try {
-    const query = encodeURIComponent('*[_type=="score"] | order(score desc) { name, score, rank, time }');
-    const res = await fetch(`${SANITY_API}/data/query/${SANITY_DATASET}?query=${query}`);
-    if (!res.ok) return [];
-    const data = await res.json();
-    return data.result || [];
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
   } catch { return []; }
 }
 
-async function saveEntry(entry) {
-  const doc = {
-    _type: 'score',
-    name: entry.name,
-    score: entry.score,
-    rank: entry.rank,
-    time: entry.time
-  };
-  const mutations = [{ create: doc }];
-  const res = await fetch(`${SANITY_API}/data/mutate/${SANITY_DATASET}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${SANITY_TOKEN}`
-    },
-    body: JSON.stringify({ mutations })
-  });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Sanity save failed: ${err}`);
-  }
-  return await res.json();
+function saveEntry(entry) {
+  const entries = loadEntries();
+  entries.push(entry);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
 }
 
-async function clearAllEntries() {
-  const mutations = [{ delete: { query: '*[_type=="score"]' } }];
-  await fetch(`${SANITY_API}/data/mutate/${SANITY_DATASET}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${SANITY_TOKEN}`
-    },
-    body: JSON.stringify({ mutations })
-  });
+function clearAllEntries() {
+  localStorage.removeItem(STORAGE_KEY);
 }
 
 // ── HELPERS ──────────────────────────────────────────────
@@ -1351,7 +1308,7 @@ function autoScore() {
 }
 
 // ── MAIN SCORE + POST ACTION ─────────────────────────────
-async function handleScore() {
+function handleScore() {
   const name = document.getElementById('nameInput').value.trim();
   if (!name) {
     showToast('Enter your name first');
@@ -1376,34 +1333,20 @@ async function handleScore() {
   currentScore = s.total;
   showScoreUI(s);
 
-  // Post to board
-  const btn = document.getElementById('scoreBtn');
-  btn.textContent = 'POSTING TO BOARD...';
-  btn.classList.add('loading');
-  btn.disabled = true;
+  // Save to leaderboard
+  saveEntry({
+    name: name,
+    score: currentScore,
+    rank: getRank(currentScore).name,
+    time: Date.now()
+  });
 
-  try {
-    await boardReady;
-    await saveEntry({
-      name: name,
-      score: currentScore,
-      rank: getRank(currentScore).name,
-      time: Date.now()
-    });
-
-    // Show success
-    document.getElementById('sucScore').textContent = currentScore;
-    document.getElementById('sucScore').style.color = getRank(currentScore).color;
-    document.getElementById('sucRank').textContent = getRank(currentScore).name;
-    goStep(2);
-    showToast('You\'re on the board!');
-  } catch(err) {
-    console.error('Submit failed:', err);
-    showToast('Failed to post — try again');
-    btn.textContent = 'SCORE IT & POST TO BOARD';
-    btn.classList.remove('loading');
-    btn.disabled = false;
-  }
+  // Show success
+  document.getElementById('sucScore').textContent = currentScore;
+  document.getElementById('sucScore').style.color = getRank(currentScore).color;
+  document.getElementById('sucRank').textContent = getRank(currentScore).name;
+  goStep(2);
+  showToast('You\'re on the board!');
 }
 
 function resetAndGoStart() {
@@ -1421,9 +1364,8 @@ function resetAndGoStart() {
 }
 
 // ── LEADERBOARD ──────────────────────────────────────────
-async function renderBoard() {
-  await boardReady;
-  const entries = await loadEntries();
+function renderBoard() {
+  const entries = loadEntries();
   const sorted = [...entries].sort((a, b) => b.score - a.score);
   const tbody = document.getElementById('boardBody');
   const empty = document.getElementById('emptyState');
@@ -1462,9 +1404,9 @@ async function renderBoard() {
   }).join('');
 }
 
-async function clearBoard() {
+function clearBoard() {
   if (!confirm('Clear all scores from the leaderboard?')) return;
-  await clearAllEntries();
+  clearAllEntries();
   renderBoard();
   showToast('Board cleared');
 }
@@ -1475,7 +1417,6 @@ function toggleFullscreen() {
 }
 
 // ── INIT ─────────────────────────────────────────────────
-let boardReady = initBoard();
 renderIndustryBar();
 renderScenarios();
 
