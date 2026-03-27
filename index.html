@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Prompt Power — Live Leaderboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -25,6 +25,7 @@
     color: var(--text);
     font-family: 'DM Sans', sans-serif;
     min-height: 100vh;
+    min-height: 100dvh;
     overflow-x: hidden;
   }
 
@@ -40,78 +41,46 @@
     z-index: 0;
   }
 
-  /* ── SHARE BAR ── */
-  .share-bar {
+  /* ── NAV BAR ── */
+  .nav-bar {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    padding: 8px 16px;
-    background: rgba(200,151,58,0.08);
-    border-bottom: 1px solid var(--border);
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-  }
-  .share-label {
-    letter-spacing: 0.12em;
-    color: var(--accent);
-    font-weight: 700;
-  }
-  .share-url {
-    color: #c0d8c8;
-    max-width: 400px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .share-copy-btn {
-    background: var(--accent);
-    color: var(--bg);
-    border: none;
-    padding: 4px 12px;
-    font-family: 'DM Mono', monospace;
-    font-size: 9px;
-    letter-spacing: 0.1em;
-    cursor: pointer;
-    font-weight: 700;
-  }
-  .share-copy-btn:hover { background: var(--accent-light); }
-
-  /* ── MODE SWITCHER ── */
-  .mode-bar {
-    display: flex;
-    justify-content: center;
-    padding: 16px 24px 0;
-    position: relative;
-    z-index: 10;
-  }
-
-  .mode-btn {
-    padding: 10px 28px;
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    border: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
     background: var(--surface);
-    color: #ffffff;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-btn {
+    flex: 1;
+    padding: 14px 12px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: none;
+    background: var(--surface);
+    color: var(--muted);
     cursor: pointer;
     transition: all 0.2s;
+    text-align: center;
+    -webkit-tap-highlight-color: transparent;
   }
 
-  .mode-btn:first-child { border-right: none; }
-  .mode-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .nav-btn.active {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 700;
+  }
 
+  /* ── VIEWS ── */
   .view { display: none; position: relative; z-index: 1; }
   .view.active { display: block; }
 
-  /* ══════════════════════════════════════════
-     ENTRY VIEW
-  ══════════════════════════════════════════ */
-
-  .entry-header {
+  /* ── HEADER ── */
+  .app-header {
     text-align: center;
-    padding: 18px 24px 10px;
+    padding: 20px 20px 12px;
   }
 
   .badge {
@@ -119,269 +88,245 @@
     background: var(--accent);
     color: #fff;
     font-family: 'DM Mono', monospace;
-    font-size: 11px;
+    font-size: 10px;
     letter-spacing: 0.15em;
     text-transform: uppercase;
-    padding: 4px 14px;
+    padding: 5px 14px;
     margin-bottom: 8px;
   }
 
-  .entry-header h1 {
+  .app-header h1 {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(32px, 5vw, 52px);
+    font-size: clamp(36px, 8vw, 56px);
     line-height: 0.95;
     letter-spacing: 0.02em;
   }
 
-  .entry-header h1 span { color: var(--accent); }
+  .app-header h1 span { color: var(--accent); }
 
-  .entry-header p {
-    color: #d0e8dc;
+  .app-header .subtitle {
+    color: var(--muted);
     font-size: 13px;
     margin-top: 6px;
+    line-height: 1.5;
   }
 
-  /* Industry bar */
-  .industry-bar {
+  /* ── STEP INDICATOR ── */
+  .steps {
     display: flex;
     justify-content: center;
-    padding: 10px 20px 0;
-    position: relative;
-    z-index: 2;
-    flex-wrap: wrap;
-    gap: 0;
+    gap: 8px;
+    padding: 0 20px 16px;
   }
 
+  .step-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: all 0.3s;
+  }
+
+  .step-dot.active { background: var(--accent); transform: scale(1.3); }
+  .step-dot.done { background: var(--green); }
+
+  /* ── INDUSTRY TABS ── */
+  .industry-bar {
+    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 12px 12px;
+    gap: 6px;
+    scrollbar-width: none;
+  }
+  .industry-bar::-webkit-scrollbar { display: none; }
+
   .ind-btn {
-    padding: 9px 22px;
+    flex-shrink: 0;
+    padding: 10px 18px;
     font-family: 'DM Mono', monospace;
     font-size: 11px;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     border: 1px solid var(--border);
     background: var(--surface);
     color: #ffffff;
     cursor: pointer;
     transition: all 0.15s;
-    margin-right: -1px;
+    border-radius: 4px;
+    -webkit-tap-highlight-color: transparent;
   }
 
-  .ind-btn.active, .ind-btn:hover {
+  .ind-btn.active {
     background: var(--accent);
     color: #fff;
     border-color: var(--accent);
-    z-index: 1;
-    position: relative;
   }
 
-  /* ── SPLIT SCREEN ── */
-  .split-wrap {
-    display: grid;
-    grid-template-columns: 420px 1fr;
-    gap: 0;
-    margin: 12px 16px 16px;
-    border: 1px solid var(--border);
-    min-height: calc(100vh - 200px);
-    position: relative;
-    z-index: 1;
-  }
-
-  @media (max-width: 900px) {
-    .split-wrap { grid-template-columns: 1fr; }
-  }
-
-  /* ── LEFT COLUMN: scenario list + brief ── */
-  .col-left {
-    border-right: 1px solid var(--border);
+  /* ── SCENARIO CARDS ── */
+  .scenario-list {
+    padding: 0 16px 20px;
     display: flex;
     flex-direction: column;
-    background: var(--surface);
-    overflow: hidden;
-  }
-
-  .col-label {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: #d0e8dc;
-    padding: 10px 16px 8px;
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-  }
-
-  /* Scenario pick list */
-  .sc-list { flex-shrink: 0; }
-
-  .sc-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--border);
-    cursor: pointer;
-    transition: background 0.15s;
-    background: transparent;
-    text-align: left;
-    width: 100%;
-  }
-
-  .sc-row:hover { background: rgba(200,151,58,0.07); }
-
-  .sc-row.active {
-    background: rgba(200,151,58,0.12);
-    border-left: 3px solid var(--accent);
-    padding-left: 13px;
-  }
-
-  .sc-num {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 24px;
-    color: var(--border);
-    line-height: 1;
-    min-width: 24px;
-    transition: color 0.15s;
-  }
-
-  .sc-row.active .sc-num, .sc-row:hover .sc-num { color: var(--accent); }
-
-  .sc-info { flex: 1; min-width: 0; }
-
-  .sc-company-role {
-    font-family: 'DM Mono', monospace;
-    font-size: 9px;
-    color: #f0c060;
-    letter-spacing: 0.06em;
-    margin-bottom: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .sc-title {
-    font-size: 12px;
-    font-weight: 600;
-    color: #ffffff;
-    line-height: 1.3;
-  }
-
-  /* Brief panel */
-  .brief-area {
-    flex: 1;
-    overflow-y: auto;
-    border-top: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-  }
-
-  .brief-area::-webkit-scrollbar { width: 4px; }
-  .brief-area::-webkit-scrollbar-track { background: var(--surface); }
-  .brief-area::-webkit-scrollbar-thumb { background: var(--border); }
-
-  .no-pick {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 30px 20px;
-    text-align: center;
-    color: #9dbfad;
     gap: 8px;
   }
 
-  .no-pick-icon { font-size: 32px; opacity: 0.3; }
+  .sc-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+    width: 100%;
+    text-align: left;
+  }
 
-  .no-pick-text {
+  .sc-card:hover, .sc-card:active { border-color: var(--accent); background: rgba(200,151,58,0.08); }
+  .sc-card.active { border-color: var(--accent); border-width: 2px; background: rgba(200,151,58,0.12); }
+
+  .sc-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    color: var(--accent);
+    min-width: 30px;
+    text-align: center;
+  }
+
+  .sc-info { flex: 1; min-width: 0; }
+
+  .sc-role {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--accent-light);
+    letter-spacing: 0.06em;
+    margin-bottom: 2px;
+  }
+
+  .sc-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.3;
+  }
+
+  .sc-arrow {
+    font-size: 20px;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+
+  /* ── STEP PANELS ── */
+  .step-panel { display: none; }
+  .step-panel.active { display: block; }
+
+  /* ── BRIEF PANEL ── */
+  .brief-panel {
+    padding: 0 16px 20px;
+  }
+
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
     font-family: 'DM Mono', monospace;
     font-size: 11px;
     letter-spacing: 0.08em;
-    line-height: 1.6;
-    color: #9dbfad;
+    padding: 8px 14px;
+    cursor: pointer;
+    margin-bottom: 16px;
+    border-radius: 4px;
+    -webkit-tap-highlight-color: transparent;
   }
 
-  .brief-inner { padding: 18px 16px 0; display: flex; flex-direction: column; gap: 12px; }
+  .back-btn:hover { border-color: var(--accent); color: var(--accent); }
 
-  /* Company identity block */
-  .co-block {
+  .brief-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .brief-top {
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
   }
 
   .co-logo {
-    width: 38px;
-    height: 38px;
+    width: 42px;
+    height: 42px;
     background: var(--accent);
     display: flex;
     align-items: center;
     justify-content: center;
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 15px;
+    font-size: 16px;
     color: #fff;
     flex-shrink: 0;
-    letter-spacing: 0.05em;
+    border-radius: 4px;
   }
 
-  .co-name {
-    font-weight: 700;
-    font-size: 13px;
-    color: #ffffff;
-    line-height: 1.2;
-  }
+  .co-name { font-weight: 700; font-size: 14px; color: #fff; }
+  .co-sector { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 0.06em; }
 
-  .co-sector {
-    font-family: 'DM Mono', monospace;
-    font-size: 9px;
-    color: #9dbfad;
-    letter-spacing: 0.06em;
+  .brief-body-area {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
   }
 
   .role-badge {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     background: var(--bg);
     border: 1px solid var(--border);
-    padding: 7px 12px;
+    padding: 8px 14px;
+    border-radius: 4px;
+    align-self: flex-start;
   }
 
   .role-badge-label {
     font-family: 'DM Mono', monospace;
     font-size: 9px;
-    color: #d0e8dc;
+    color: var(--muted);
     letter-spacing: 0.1em;
     text-transform: uppercase;
   }
 
-  .role-badge-val {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--accent);
-  }
+  .role-badge-val { font-size: 13px; font-weight: 600; color: var(--accent); }
 
   .brief-headline {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 20px;
+    font-size: 22px;
     letter-spacing: 0.03em;
     line-height: 1.1;
     color: var(--text);
   }
 
   .brief-body {
-    font-size: 12px;
+    font-size: 13px;
     line-height: 1.75;
     color: #e8f0ec;
   }
 
-  .brief-body strong { color: var(--accent); font-weight: 600; }
-  .brief-body em { color: var(--text); font-style: normal; font-weight: 600; }
-
   .challenge-box {
     background: rgba(200,151,58,0.07);
     border-left: 3px solid var(--accent);
-    padding: 10px 12px;
-    margin: 0;
+    padding: 12px 14px;
+    border-radius: 0 4px 4px 0;
   }
 
   .challenge-label {
@@ -390,49 +335,27 @@
     color: var(--accent);
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    margin-bottom: 5px;
+    margin-bottom: 6px;
   }
 
   .challenge-text {
     font-size: 12px;
     line-height: 1.65;
-    color: #ffffff;
-  }
-
-  .use-starter-btn {
-    width: 100%;
-    padding: 13px;
-    background: var(--accent);
-    border: none;
     color: #fff;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 16px;
-    letter-spacing: 0.1em;
-    cursor: pointer;
-    transition: all 0.2s;
-    flex-shrink: 0;
-    margin-top: 14px;
   }
 
-  .use-starter-btn:hover { background: var(--accent-light); color: #0d1f18; }
-
-  /* ── RIGHT COLUMN: editor ── */
-  .col-right {
+  /* ── PROMPT FORM ── */
+  .prompt-form {
+    padding: 0 16px 16px;
     display: flex;
     flex-direction: column;
-    background: var(--bg);
-  }
-
-  .name-row {
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
+    gap: 12px;
   }
 
   .field-label {
     font-family: 'DM Mono', monospace;
-    font-size: 9px;
-    letter-spacing: 0.16em;
+    font-size: 10px;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
     color: #d0e8dc;
     display: block;
@@ -445,60 +368,63 @@
     border: 1px solid var(--border);
     color: #ffffff;
     font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    padding: 9px 12px;
+    font-size: 16px;
+    padding: 12px 14px;
     outline: none;
+    border-radius: 4px;
     transition: border-color 0.2s;
+    -webkit-appearance: none;
   }
 
   input[type="text"]:focus { border-color: var(--accent); }
   input[type="text"]::placeholder { color: var(--muted); font-style: italic; }
 
-  .prompt-col {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    padding: 12px 16px;
-    gap: 8px;
-  }
-
-  .prompt-label-row {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-  }
-
-  .prompt-hint {
-    font-family: 'DM Mono', monospace;
-    font-size: 9px;
-    color: #9dbfad;
-    letter-spacing: 0.04em;
-  }
-
   textarea {
-    flex: 1;
     width: 100%;
     background: var(--surface);
     border: 1px solid var(--border);
     color: #ffffff;
     font-family: 'DM Mono', monospace;
-    font-size: 12px;
+    font-size: 14px;
     line-height: 1.75;
-    padding: 12px;
+    padding: 14px;
     resize: none;
-    min-height: 180px;
+    min-height: 200px;
     outline: none;
+    border-radius: 4px;
     transition: border-color 0.2s;
+    -webkit-appearance: none;
   }
 
   textarea:focus { border-color: var(--accent); }
-  textarea::placeholder { color: var(--muted); font-style: italic; font-family: 'DM Sans', sans-serif; font-size: 12px; line-height: 1.6; }
+  textarea::placeholder { color: var(--muted); font-style: italic; font-family: 'DM Sans', sans-serif; font-size: 13px; }
 
-  /* Live score strip */
+  /* ── SCORE BUTTON ── */
+  .btn-score-big {
+    width: 100%;
+    padding: 18px;
+    background: var(--accent);
+    border: none;
+    color: #fff;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .btn-score-big:hover { background: var(--accent-light); color: #0d1f18; }
+  .btn-score-big:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+  .btn-score-big.loading { opacity: 0.7; pointer-events: none; }
+
+  /* ── SCORE STRIP ── */
   .score-strip {
     display: none;
     border: 1px solid var(--border);
-    border-top: none;
+    border-radius: 6px;
+    overflow: hidden;
   }
 
   .score-strip.shown { display: flex; }
@@ -506,7 +432,7 @@
   .score-main {
     background: var(--surface);
     border-right: 1px solid var(--border);
-    padding: 10px 16px;
+    padding: 12px 16px;
     text-align: center;
     min-width: 80px;
     flex-shrink: 0;
@@ -514,7 +440,7 @@
 
   .score-num {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 40px;
+    font-size: 42px;
     line-height: 1;
     color: var(--accent);
   }
@@ -524,45 +450,45 @@
     font-size: 8px;
     letter-spacing: 0.06em;
     color: #d0e8dc;
-    margin-top: 1px;
+    margin-top: 2px;
   }
 
   .score-pills {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 3px;
-    padding: 8px 10px;
+    gap: 4px;
+    padding: 10px;
     flex: 1;
   }
 
   .pill {
     background: var(--bg);
     border: 1px solid var(--border);
-    padding: 3px 7px;
+    padding: 4px 8px;
     font-family: 'DM Mono', monospace;
     font-size: 9px;
     letter-spacing: 0.04em;
     color: #c0d8c8;
+    border-radius: 3px;
   }
 
   .pill.lit { border-color: var(--green); color: var(--green); background: rgba(168,212,160,0.08); }
 
-  /* ── Feedback breakdown panel ── */
+  /* ── Feedback ── */
   .feedback-panel {
     display: none;
     border: 1px solid var(--border);
-    border-top: none;
+    border-radius: 6px;
     background: var(--surface);
-    max-height: 260px;
-    overflow-y: auto;
+    overflow: hidden;
   }
   .feedback-panel.shown { display: block; }
 
   .fb-row {
     display: flex;
     gap: 10px;
-    padding: 10px 14px;
+    padding: 12px 14px;
     border-bottom: 1px solid var(--border);
     align-items: flex-start;
   }
@@ -570,13 +496,13 @@
 
   .fb-badge {
     flex-shrink: 0;
-    width: 60px;
+    width: 56px;
     text-align: center;
     font-family: 'DM Mono', monospace;
     font-size: 9px;
     letter-spacing: 0.04em;
-    padding: 3px 0;
-    border-radius: 2px;
+    padding: 4px 0;
+    border-radius: 3px;
     margin-top: 2px;
   }
   .fb-badge.full  { background: rgba(168,212,160,0.12); color: var(--green); border: 1px solid var(--green); }
@@ -584,96 +510,57 @@
   .fb-badge.empty { background: rgba(255,80,80,0.08); color: #ff6b6b; border: 1px solid rgba(255,80,80,0.3); }
 
   .fb-body { flex: 1; min-width: 0; }
-  .fb-label {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: #d0e8dc;
-    margin-bottom: 3px;
-  }
-  .fb-text {
-    font-size: 12px;
-    line-height: 1.5;
-    color: #c0d8c8;
-  }
-  .fb-tip {
-    font-size: 11px;
-    line-height: 1.4;
-    color: var(--accent);
-    margin-top: 4px;
-  }
+  .fb-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: #d0e8dc; margin-bottom: 3px; }
+  .fb-text { font-size: 12px; line-height: 1.5; color: #c0d8c8; }
+  .fb-tip { font-size: 11px; line-height: 1.4; color: var(--accent); margin-top: 4px; }
 
-  .action-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    flex-shrink: 0;
-  }
-
-  .btn-score {
-    padding: 13px;
-    background: var(--surface);
-    border: 1px solid var(--accent);
-    border-right: none;
-    color: #ffffff;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 17px;
-    letter-spacing: 0.1em;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .btn-score:hover { background: var(--accent); color: #fff; }
-
-  .btn-submit {
-    padding: 13px;
-    background: var(--accent);
-    border: 1px solid var(--accent);
-    color: #fff;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 17px;
-    letter-spacing: 0.1em;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .btn-submit:hover { background: var(--accent-light); color: #0d1f18; }
-  .btn-submit:disabled { background: var(--muted); border-color: var(--muted); cursor: not-allowed; color: rgba(255,255,255,0.5); }
-
-  /* Success overlay */
-  .success-panel {
+  /* ── SUCCESS ── */
+  .success-view {
     display: none;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    padding: 50px 24px;
+    gap: 12px;
+    padding: 50px 24px 80px;
     text-align: center;
-    flex: 1;
   }
 
-  .success-panel.shown { display: flex; }
+  .success-view.shown { display: flex; }
 
-  .suc-label { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.15em; color: #d0e8dc; }
-  .suc-score { font-family: 'Bebas Neue', sans-serif; font-size: 110px; line-height: 1; color: var(--green); }
-  .suc-rank { font-size: 20px; font-weight: 700; }
-  .suc-sub { font-family: 'DM Mono', monospace; font-size: 10px; color: #9dbfad; letter-spacing: 0.08em; line-height: 1.6; margin-top: 4px; }
+  .suc-label { font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.15em; color: #d0e8dc; }
+  .suc-score { font-family: 'Bebas Neue', sans-serif; font-size: 100px; line-height: 1; color: var(--green); }
+  .suc-rank { font-size: 22px; font-weight: 700; }
+  .suc-sub { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 0.06em; line-height: 1.6; margin-top: 4px; }
 
   .btn-again {
-    margin-top: 10px;
+    margin-top: 14px;
+    padding: 14px 28px;
     background: transparent;
     border: 1px solid var(--accent);
-    color: #ffffff;
+    color: #fff;
     font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.12em;
-    padding: 10px 24px;
+    font-size: 12px;
+    letter-spacing: 0.1em;
     cursor: pointer;
     text-transform: uppercase;
-    transition: all 0.2s;
+    border-radius: 4px;
+    -webkit-tap-highlight-color: transparent;
   }
+  .btn-again:hover { background: var(--accent); }
 
-  .btn-again:hover { background: var(--accent); color: #fff; }
+  .btn-view-board {
+    padding: 14px 28px;
+    background: var(--accent);
+    border: none;
+    color: #fff;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    border-radius: 4px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn-view-board:hover { background: var(--accent-light); color: #0d1f18; }
 
   /* ══════════════════════════════════════════
      LEADERBOARD VIEW
@@ -681,7 +568,7 @@
   .board-wrap {
     max-width: 900px;
     margin: 0 auto;
-    padding: 28px 20px 80px;
+    padding: 24px 16px 80px;
   }
 
   .board-head {
@@ -698,7 +585,6 @@
     font-size: clamp(38px, 8vw, 72px);
     line-height: 0.9;
   }
-
   .board-title span { color: var(--accent); display: block; }
 
   .live-pill {
@@ -733,152 +619,220 @@
     border: 1px solid var(--border);
     padding: 14px;
     text-align: center;
+    border-radius: 6px;
   }
 
-  .stat-n { font-family: 'Bebas Neue', sans-serif; font-size: 36px; color: var(--accent); line-height: 1; }
+  .stat-n { font-family: 'Bebas Neue', sans-serif; font-size: 34px; color: var(--accent); line-height: 1; }
   .stat-l { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.12em; color: #d0e8dc; margin-top: 3px; }
 
   table { width: 100%; border-collapse: collapse; }
-  th { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: #d0e8dc; padding: 8px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+  th {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #d0e8dc;
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
 
   .b-row { border-bottom: 1px solid var(--border); animation: slideIn 0.35s ease; }
   .b-row:hover { background: var(--surface); }
-  .b-row td { padding: 11px 14px; vertical-align: middle; }
+  .b-row td { padding: 12px 14px; vertical-align: middle; }
 
   @keyframes slideIn { from{opacity:0;transform:translateY(-5px)} to{opacity:1;transform:translateY(0)} }
 
-  .b-rank { font-family: 'Bebas Neue', sans-serif; font-size: 26px; color: #9dbfad; width: 44px; }
+  .b-rank { font-family: 'Bebas Neue', sans-serif; font-size: 26px; color: var(--muted); width: 44px; }
   .gold { color: #ffd700; } .silver { color: #c0c0c0; } .bronze { color: #cd7f32; }
   .b-name { font-size: 16px; font-weight: 600; }
-  .b-sub { font-family: 'DM Mono', monospace; font-size: 9px; color: #9dbfad; margin-top: 2px; }
-  .bar-wrap { height: 2px; background: var(--border); margin-top: 4px; }
-  .bar-fill { height: 100%; transition: width 0.8s ease; }
+  .b-sub { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); margin-top: 2px; }
+  .bar-wrap { height: 2px; background: var(--border); margin-top: 4px; border-radius: 1px; }
+  .bar-fill { height: 100%; transition: width 0.8s ease; border-radius: 1px; }
   .b-score { font-family: 'Bebas Neue', sans-serif; font-size: 34px; text-align: right; }
-  .b-score-sub { font-family: 'DM Mono', monospace; font-size: 9px; text-align: right; color: #9dbfad; }
+  .b-score-sub { font-family: 'DM Mono', monospace; font-size: 9px; text-align: right; color: var(--muted); }
 
-  .empty { text-align: center; padding: 60px 20px; color: #9dbfad; font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.1em; }
+  .empty { text-align: center; padding: 60px 20px; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.1em; }
   .empty-icon { font-size: 40px; display: block; margin-bottom: 12px; opacity: 0.35; }
 
   .board-ctrls { display: flex; gap: 6px; padding-bottom: 4px; }
-  .btn-clear { background: transparent; border: 1px solid var(--red); color: #ffffff; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; padding: 6px 12px; cursor: pointer; transition: all 0.2s; text-transform: uppercase; }
-  .btn-clear:hover { background: var(--red); color: #fff; }
-  .btn-fs { background: transparent; border: 1px solid var(--border); color: #ffffff; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; padding: 6px 12px; cursor: pointer; transition: all 0.2s; }
+  .btn-clear {
+    background: transparent;
+    border: 1px solid var(--red);
+    color: #fff;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    padding: 8px 14px;
+    cursor: pointer;
+    text-transform: uppercase;
+    border-radius: 4px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn-clear:hover { background: var(--red); }
+  .btn-fs {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: #fff;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    padding: 8px 14px;
+    cursor: pointer;
+    border-radius: 4px;
+    -webkit-tap-highlight-color: transparent;
+  }
   .btn-fs:hover { border-color: var(--accent); color: var(--accent); }
 
-  .footer { text-align: center; padding: 18px 20px 22px; font-family: 'DM Mono', monospace; font-size: 11px; color: #9dbfad; letter-spacing: 0.1em; position: relative; z-index: 1; }
+  .footer {
+    text-align: center;
+    padding: 18px 20px 22px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    position: relative;
+    z-index: 1;
+  }
 
-  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(70px); background: var(--surface); border: 1px solid var(--accent); color: var(--text); font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.06em; padding: 11px 22px; transition: transform 0.3s ease; z-index: 200; pointer-events: none; }
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(70px);
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    padding: 12px 24px;
+    border-radius: 6px;
+    transition: transform 0.3s ease;
+    z-index: 200;
+    pointer-events: none;
+    white-space: nowrap;
+  }
   .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ── Desktop enhancements ── */
+  @media (min-width: 768px) {
+    .scenario-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .prompt-form {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .brief-panel {
+      max-width: 700px;
+      margin: 0 auto;
+      padding-bottom: 20px;
+    }
+    textarea { min-height: 250px; }
+  }
 </style>
 </head>
 <body>
 
-<div class="mode-bar">
-  <button class="mode-btn active" onclick="setMode('entry')" id="btnEntry">⌨ Enter My Prompt</button>
-  <button class="mode-btn" onclick="setMode('board')" id="btnBoard">🏆 Live Leaderboard</button>
+<!-- ═══ NAV ═══ -->
+<div class="nav-bar">
+  <button class="nav-btn active" id="navEntry" onclick="switchView('entry')">PROMPT ENTRY</button>
+  <button class="nav-btn" id="navBoard" onclick="switchView('board')">LEADERBOARD</button>
 </div>
 
-<!-- ═══════════════════════════ ENTRY VIEW ═══════════════════════════ -->
+<!-- ═══════════════ ENTRY VIEW ═══════════════ -->
 <div class="view active" id="viewEntry">
 
-  <div class="entry-header">
-    <div class="badge">⚡ Okapi & Co — AI Prompt Challenge</div>
+  <div class="app-header">
+    <div class="badge">Informa InfoSec AI Workshop</div>
     <h1>PROMPT <span>POWER</span></h1>
-    <p>Pick a scenario · read the brief · write the sharpest prompt you can · get on the board</p>
+    <p class="subtitle">Pick a scenario &middot; write the sharpest prompt you can &middot; get on the board</p>
   </div>
 
-  <div class="industry-bar">
-    <button class="ind-btn active" onclick="setIndustry('sales')">💼 Sales</button>
-    <button class="ind-btn" onclick="setIndustry('marketing')">📣 Marketing</button>
-    <button class="ind-btn" onclick="setIndustry('operations')">⚙️ Operations</button>
-    <button class="ind-btn" onclick="setIndustry('finance')">📊 Finance</button>
+  <div class="steps">
+    <div class="step-dot active" id="dot0"></div>
+    <div class="step-dot" id="dot1"></div>
+    <div class="step-dot" id="dot2"></div>
   </div>
 
-  <div class="split-wrap">
+  <!-- ── STEP 0: Pick scenario ── -->
+  <div class="step-panel active" id="step0">
+    <div class="industry-bar" id="industryBar"></div>
+    <div class="scenario-list" id="scList"></div>
+  </div>
 
-    <!-- LEFT: scenarios + brief -->
-    <div class="col-left">
-      <div class="col-label">01 — Pick a scenario</div>
-      <div class="sc-list" id="scList"></div>
-
-      <div class="brief-area" id="briefArea">
-        <div class="no-pick" id="noPick">
-          <div class="no-pick-icon">☝️</div>
-          <div class="no-pick-text">Choose a scenario above<br>to read the full brief</div>
-        </div>
-
-        <!-- Brief (hidden until selected) -->
-        <div id="briefInner" style="display:none; flex-direction:column; height:100%;">
-          <div class="brief-inner" id="briefContent"></div>
-        </div>
+  <!-- ── STEP 1: Brief + Prompt ── -->
+  <div class="step-panel" id="step1">
+    <div class="brief-panel">
+      <button class="back-btn" onclick="goStep(0)">&#8592; BACK TO SCENARIOS</button>
+      <div class="brief-card">
+        <div class="brief-top" id="briefTop"></div>
+        <div class="brief-body-area" id="briefBody"></div>
       </div>
     </div>
 
-    <!-- RIGHT: name + prompt editor -->
-    <div class="col-right">
-      <div class="name-row">
-        <label class="field-label" for="nameInput">Your name</label>
-        <input type="text" id="nameInput" placeholder="e.g. Sarah Mitchell" maxlength="40" />
+    <div class="prompt-form">
+      <div>
+        <label class="field-label" for="nameInput">Your Name</label>
+        <input type="text" id="nameInput" placeholder="e.g. Sarah Mitchell" maxlength="40" autocomplete="off" />
       </div>
 
-      <!-- Prompt editor (shown by default) -->
-      <div class="prompt-col" id="promptCol">
-        <div class="prompt-label-row">
-          <label class="field-label" for="promptInput">02 — Write your prompt</label>
-          <span class="prompt-hint">auto-scores as you type</span>
-        </div>
-        <textarea id="promptInput" placeholder="Pick a scenario on the left, read the brief, then write your best prompt from scratch.&#10;&#10;Think about: role · task · context · audience · format · tone · constraints · examples"></textarea>
-
-        <div class="score-strip" id="scoreStrip">
-          <div class="score-main">
-            <div class="score-num" id="scoreNum">0</div>
-            <div class="score-rank-label" id="scoreRankLabel">—</div>
-          </div>
-          <div class="score-pills" id="scorePills"></div>
-        </div>
-
-        <div class="feedback-panel" id="feedbackPanel"></div>
-
-        <div class="action-row">
-          <button class="btn-score" onclick="scorePrompt(true)">⚡ SCORE IT</button>
-          <button class="btn-submit" id="submitBtn" onclick="submitScore()" disabled>🏆 POST TO BOARD</button>
-        </div>
+      <div>
+        <label class="field-label" for="promptInput">Write Your Prompt</label>
+        <textarea id="promptInput" placeholder="Read the brief above, then write your best prompt from scratch.&#10;&#10;Think about: role &middot; task &middot; context &middot; audience &middot; format &middot; tone &middot; constraints &middot; examples"></textarea>
       </div>
 
-      <!-- Success panel -->
-      <div class="success-panel" id="successPanel">
-        <div class="suc-label">YOUR SCORE</div>
-        <div class="suc-score" id="sucScore">0</div>
-        <div class="suc-rank" id="sucRank">—</div>
-        <div class="suc-sub">You're on the board.<br>Ask someone to put the leaderboard on screen!</div>
-        <button class="btn-again" onclick="resetEntry()">↩ TRY AGAIN</button>
+      <div class="score-strip" id="scoreStrip">
+        <div class="score-main">
+          <div class="score-num" id="scoreNum">0</div>
+          <div class="score-rank-label" id="scoreRankLabel">&mdash;</div>
+        </div>
+        <div class="score-pills" id="scorePills"></div>
       </div>
+
+      <div class="feedback-panel" id="feedbackPanel"></div>
+
+      <button class="btn-score-big" id="scoreBtn" onclick="handleScore()">SCORE IT &amp; POST TO BOARD</button>
     </div>
+  </div>
 
+  <!-- ── STEP 2: Success ── -->
+  <div class="step-panel" id="step2">
+    <div class="success-view shown">
+      <div class="suc-label">YOUR SCORE</div>
+      <div class="suc-score" id="sucScore">0</div>
+      <div class="suc-rank" id="sucRank">&mdash;</div>
+      <div class="suc-sub">You're on the board!<br>Check the leaderboard to see your ranking.</div>
+      <button class="btn-view-board" onclick="switchView('board')">VIEW LEADERBOARD</button>
+      <button class="btn-again" onclick="resetAndGoStart()">TRY AGAIN</button>
+    </div>
   </div>
 </div>
 
-<!-- ═══════════════════════════ LEADERBOARD VIEW ═══════════════════════════ -->
+<!-- ═══════════════ LEADERBOARD VIEW ═══════════════ -->
 <div class="view" id="viewBoard">
   <div class="board-wrap">
     <div class="board-head">
       <div>
-        <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.15em;color:#d0e8dc;margin-bottom:6px;">OKAPI & CO · AI EVENT</div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.15em;color:#d0e8dc;margin-bottom:6px;">INFORMA INFOSEC &middot; AI WORKSHOP</div>
         <div class="board-title">LIVE<span>LEADERBOARD</span></div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
-        <div class="live-pill"><div class="live-dot"></div>LIVE · AUTO-REFRESH</div>
+        <div class="live-pill"><div class="live-dot"></div>LIVE &middot; AUTO-REFRESH</div>
         <div class="board-ctrls">
-          <button class="btn-fs" onclick="toggleFullscreen()">⛶ FULLSCREEN</button>
-          <button class="btn-clear" onclick="clearBoard()">✕ CLEAR ALL</button>
+          <button class="btn-fs" onclick="toggleFullscreen()">FULLSCREEN</button>
+          <button class="btn-clear" onclick="clearBoard()">CLEAR ALL</button>
         </div>
       </div>
     </div>
 
     <div class="stat-row">
       <div class="stat-box"><div class="stat-n" id="stCount">0</div><div class="stat-l">Entries</div></div>
-      <div class="stat-box"><div class="stat-n" id="stTop">—</div><div class="stat-l">Top Score</div></div>
-      <div class="stat-box"><div class="stat-n" id="stAvg">—</div><div class="stat-l">Avg Score</div></div>
+      <div class="stat-box"><div class="stat-n" id="stTop">&mdash;</div><div class="stat-l">Top Score</div></div>
+      <div class="stat-box"><div class="stat-n" id="stAvg">&mdash;</div><div class="stat-l">Avg Score</div></div>
     </div>
 
     <table>
@@ -891,408 +845,157 @@
       </thead>
       <tbody id="boardBody"></tbody>
     </table>
-    <div class="empty" id="emptyState" style="display:none">
-      <span class="empty-icon">🏆</span>
-      Waiting for entries...<br>Ask everyone to pick a scenario and write their best prompt
+    <div class="empty" id="emptyState">
+      <span class="empty-icon"></span>
+      Waiting for entries...<br>Pick a scenario and write your best prompt!
     </div>
   </div>
 </div>
 
-<div class="footer">PROMPT POWER &nbsp;·&nbsp; OKAPI & CO &nbsp;·&nbsp; AI-FIRST SEO AGENCY</div>
+<div class="footer">PROMPT POWER &nbsp;&middot;&nbsp; INFORMA INFOSEC AI WORKSHOP</div>
 <div class="toast" id="toast"></div>
 
 <script>
-// ═══════════════════════════════════════════════════════════
-//  SCENARIO DATA
-//  Each scenario: company · sector · logo (2-3 chars) · role
-//  brief: HTML string with <strong> / <em> for emphasis
-//  challenge: plain text — what you're asking AI to help with
-//  starter: the pre-filled prompt they can edit
-// ═══════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════
+   SCENARIO DATA
+═══════════════════════════════════════════════════════════ */
 
-const STARTERS = {
-
-  sales: [
+const SCENARIOS = {
+  event_production: [
     {
-      title: "The pipeline is full — but nothing is closing",
-      company: "Northgate Dynamics",
-      sector: "B2B Software · 120 staff",
-      logo: "ND",
-      role: "Head of Sales",
-      brief: `You joined <strong>Northgate Dynamics</strong> eight months ago specifically to professionalise the sales function. On paper, things looked healthy — 34 active opportunities, a respected product, reasonable brand recognition in the market. But the last two quarters have been a slow-motion disaster.
-
-Deals are reaching proposal stage and then going completely silent. Prospects who seemed engaged after demos are now unreachable. Two of your best reps are starting to look over their shoulders. The CEO has asked you to come in on Friday with <em>a frank assessment and a credible recovery plan</em>.
-
-You've got one hour before back-to-back calls. You need to think clearly about what's actually broken — pipeline quality, rep behaviour, proposal structure, follow-up cadence — and what to do about it in the next 30 days.`,
-      challenge: `Your prompt should ask AI to help you diagnose why deals are stalling at late stage and build a structured 30-day recovery plan. It should cover: root cause analysis, deal review framework, rep coaching priorities, reactivation sequences for cold prospects, and how to frame the conversation with your CEO. Be specific about your business situation — don't let AI give you generic advice.`,
-      starter: `Act as an experienced B2B sales director and performance coach. I am Head of Sales at Northgate Dynamics, a 120-person B2B software company. We have 34 active pipeline opportunities but have closed only 3 deals in the past 8 weeks. Most deals are stalling at proposal stage or going silent after demos. I need your help with the following:
-
-1. Diagnose the 5 most likely reasons deals stall at proposal and post-demo stage in B2B software sales — and for each, give me one diagnostic question I can use in a deal review to test whether that's what's happening
-2. Build a 30-day pipeline recovery plan with specific weekly focus areas and actions for me and my reps
-3. Create a deal review scoring framework I can use to categorise every opportunity as: Alive (pursue hard), Uncertain (needs action), or Dead (close out)
-4. Write a 3-email reactivation sequence for prospects who have gone silent in the last 4–6 weeks — the tone should be confident and direct, not desperate
-5. Suggest how to structure Friday's CEO conversation — I need to acknowledge what's gone wrong but leave the room with their confidence intact
-
-Our average deal value is £28,000. Sales cycle is typically 6–10 weeks. We sell to Operations and IT Directors at mid-market manufacturing businesses (50–300 employees). Be specific and practical — nothing generic.`
+      title: "Speaker Shortlist",
+      company: "Informa InfoSec",
+      sector: "Events & Conferences",
+      logo: "EP",
+      role: "Event Producer",
+      brief: "You're producing a cybersecurity conference and need to assemble a strong keynote line-up. The programme director wants five recommended speakers with clear reasons for each.",
+      challenge: "Your prompt should ask AI to recommend 5 keynote speakers for a cybersecurity conference. A strong prompt will specify the audience, the event's theme or focus areas, and what criteria matter most (e.g. expertise, diversity, speaking ability). Be specific about what \"reasons\" means.",
+      starter: "Give me 5 keynote speaker recommendations for a cybersecurity conference."
     },
     {
-      title: "Losing on price — third time this quarter",
-      company: "Northgate Dynamics",
-      sector: "B2B Software · 120 staff",
-      logo: "ND",
-      role: "Enterprise Account Executive",
-      brief: `You're a solid performer at <strong>Northgate Dynamics</strong> — but you've just lost your third major deal in a row to a competitor called <em>Vantix</em>. They're newer, cheaper, and their sales team is aggressive. The post-loss feedback from two accounts was nearly identical: <em>"We preferred your product, but we couldn't justify the 40% price premium to our board."</em>
-
-You know Vantix cuts corners on security compliance and their integrations are fragile — but your prospects aren't asking the right questions, and Vantix aren't volunteering the answers.
-
-Tomorrow you have a discovery call with a £65,000 prospect. Your CRM shows they're also in conversation with Vantix. You need to go in better prepared than you've ever been.`,
-      challenge: `Your prompt should ask AI to help you build a competitive battle card against Vantix, prepare for tomorrow's discovery call, create discovery questions that expose competitor weaknesses without being openly critical, and give you a value-based ROI framework that makes the price premium feel rational. The goal is to win this deal — not just have a good call.`,
-      starter: `Act as a senior B2B sales strategist and competitive intelligence consultant. I am an Enterprise Account Executive at Northgate Dynamics, a B2B software business. I have lost 3 consecutive deals to a cheaper competitor called Vantix — prospects say they prefer our product but struggle to justify the 40% price premium internally. I have a £65,000 discovery call tomorrow with a prospect who is also evaluating Vantix.
-
-Please help me with:
-1. A competitive battle card comparing Northgate vs Vantix — focus on areas where we are objectively stronger (security compliance, integrations, support SLAs) and how to surface these naturally in discovery rather than via direct comparison
-2. Five discovery questions that will help me understand the prospect's real decision criteria and risk tolerance — questions that will also naturally expose gaps in Vantix's offer without me criticising a competitor directly
-3. A value-based ROI conversation framework I can walk the prospect through to reframe the price discussion from "cost" to "return on investment"
-4. Prepared responses to three objections I know are coming: "Vantix is significantly cheaper", "Vantix is offering a free 90-day trial", and "We'll decide after our financial year-end"
-5. A call opening that immediately builds credibility and differentiates me from a typical software salesperson
-
-The prospect is Head of Operations at a 200-person logistics business. They care about reliability, compliance, and not having to manage another failed implementation.`
+      title: "Agenda Builder",
+      company: "Informa InfoSec",
+      sector: "Events & Conferences",
+      logo: "AB",
+      role: "Event Producer",
+      brief: "You have transcripts from three competitor events and need to identify common topics and gaps. The goal is to build a differentiated agenda for your own conference.",
+      challenge: "Your prompt should ask AI to analyse competitor event transcripts, summarise common themes, and identify what they missed. A good prompt will define the event context, what \"missed\" means for your audience, and the output format you need.",
+      starter: "Summarise the common topics from these competitor event transcripts and suggest what they missed."
     },
     {
-      title: "New territory — no contacts, no warm introductions",
-      company: "Crestfield Advisory",
-      sector: "Management Consulting · 45 staff",
-      logo: "CA",
-      role: "Business Development Manager",
-      brief: `<strong>Crestfield Advisory</strong> has just expanded into the Yorkshire and Humber region. You've been given the territory, the laptop, and a target of <em>five qualified discovery meetings in six weeks</em>. That's it.
-
-The problem is you don't know anyone here. The regional business community is tight-knit, reputation-driven, and deeply sceptical of consultants who parachute in. You've spent the last two weeks doing LinkedIn research and have built a list of 40 target companies — but the list alone won't get you meetings.
-
-You've tried cold calling before. It works occasionally but it burns goodwill fast in a market where word travels. You need a smarter approach.`,
-      challenge: `Your prompt should ask AI to help you build a credibility-first prospecting strategy for a brand new territory — one that warms up cold contacts before you ask for a meeting, rather than cold approaching 40 strangers. It should cover LinkedIn strategy, referral approaches, content and event tactics, prioritisation of your target list, and how to write outreach that actually gets replies.`,
-      starter: `Act as a B2B business development strategist with expertise in professional services and relationship-based selling. I am a Business Development Manager at Crestfield Advisory, a 45-person management consulting firm. I have just been given a new territory — Yorkshire and Humber — with zero existing contacts, no warm introductions, and a target of 5 qualified discovery meetings within 6 weeks.
-
-I have a list of 40 target companies (mid-market businesses, 50–250 employees, primarily manufacturing and professional services). Cold calling feels like the wrong approach for a market that is tight-knit and reputation-driven. I need a credibility-first strategy.
-
-Please help me:
-1. Design a 6-week territory development plan that warms up prospects before I ask for a meeting — include specific weekly activities across LinkedIn, events, referral outreach, and content engagement
-2. Write a prioritisation framework to identify which 10 of my 40 target companies to focus on in weeks 1–2 based on factors like propensity to buy, accessibility, and referral potential
-3. Write a personalised cold email sequence (3 emails, spaced 1 week apart) that generates replies without feeling like a template — make it feel like I've done my homework on their specific business
-4. Give me a LinkedIn 4-week activation plan: what to post, who to engage with, and how to build genuine visibility with my target prospects before making direct contact
-5. Write a 60-second opening script for a first phone call with a cold prospect — the goal is to open a genuine conversation, not pitch
-
-I want to build a sustainable reputation in this region, not burn goodwill with volume outreach.`
-    },
-    {
-      title: "Major renewal at risk — and the relationship is fraying",
-      company: "Crestfield Advisory",
-      sector: "Management Consulting · 45 staff",
-      logo: "CA",
-      role: "Senior Account Manager",
-      brief: `One of your longest-standing clients at <strong>Crestfield Advisory</strong> — a £90,000 annual retainer — is going quiet. The contact you built the relationship with over three years left the business four months ago. Their replacement, a new Operations Director named <em>Rachel Bower</em>, is commercially sharp, sceptical of consultants in general, and has already hinted that she's "reviewing all supplier relationships."
-
-Your last call with Rachel ended awkwardly. She said she'd "be in touch about the renewal." That was three weeks ago. Silence since. The contract expires in six weeks. If this account churns, it's 18% of your personal annual target — and your manager has already noticed.
-
-You've been putting off the re-engagement email for a week because you can't work out the right tone.`,
-      challenge: `Your prompt should ask AI to help you re-engage after three weeks of silence, prepare for a renewal conversation with a sceptical new decision-maker who doesn't know your work, build a compelling case for renewal, and plan how to handle the hardest objections. The goal is to save this account — and ideally expand it.`,
-      starter: `Act as a senior client success and account management strategist with experience in professional services. I am a Senior Account Manager at Crestfield Advisory, a management consulting firm. I have a £90,000 annual retainer renewal at risk in 6 weeks. The original client contact left 4 months ago. The new Operations Director, Rachel Bower, is commercially focused, sceptical of consultants, and has gone silent after hinting she's reviewing supplier relationships. I have had no contact in 3 weeks.
-
-Please help me:
-1. Write a re-engagement email that breaks 3 weeks of silence — it should be direct and confident without sounding desperate; the goal is to get a meeting, not to grovel
-2. Help me build a value narrative for the renewal meeting: what evidence of impact should I be pulling together from the last 12 months, and how should I frame it for a decision-maker who doesn't know our work?
-3. Prepare me for the renewal meeting — give me an opening, a structure for the conversation, and responses to the 3 most likely objections: "We want to review all our consultants before renewing", "I'm not sure we're getting value", and "Can you reduce the fee?"
-4. Write a concise one-page summary document I can send before the meeting that communicates the value we've delivered in commercial terms — something that lands with a numbers-driven Operations Director
-5. Advise me on whether and how to introduce an expansion opportunity during this meeting — or whether that's too soon given the situation
-
-I want to save this account and rebuild a relationship with Rachel from a position of strength, not anxiety.`
+      title: "Event Wrap-Up",
+      company: "Informa InfoSec",
+      sector: "Events & Conferences",
+      logo: "EW",
+      role: "Event Producer",
+      brief: "A two-day cybersecurity conference just finished. You need to write a one-page stakeholder summary from the session transcripts before the debrief meeting tomorrow morning.",
+      challenge: "Your prompt should ask AI to produce a stakeholder summary from conference session transcripts. A strong prompt will specify the audience for the summary, what stakeholders care about, the structure you want, and any constraints on length or tone.",
+      starter: "Write a summary of our two-day conference from the session transcripts."
     }
   ],
-
-  marketing: [
+  risk_compliance: [
     {
-      title: "Product launch — making noise with a small budget",
-      company: "Velour Studio",
-      sector: "DTC Activewear · 28 staff",
-      logo: "VS",
-      role: "Head of Marketing",
-      brief: `<strong>Velour Studio</strong> makes premium sustainable activewear and has just developed something genuinely innovative — a biometric sports bra that tracks heart rate, recovery, and breathing data without any chest strap or external wearable. It's patented. Nothing like it exists at this price point.
-
-You're launching in 10 weeks. The problem? You have 40,000 social followers, a modest budget, and competitors like Lululemon and Gymshark with marketing machines you simply cannot match in paid spend.
-
-The CEO has already told the board this is the "make or break" product for the next two years. The pressure is real. You need a launch strategy that creates disproportionate noise — one that leverages creativity, creator relationships, and earned media rather than outspending the competition.`,
-      challenge: `Your prompt should ask AI to build a complete 10-week pre-launch and launch plan — covering waitlist strategy, influencer and creator approach, PR angles that will actually get picked up, content calendar, and what launch week should look and feel like. You want to punch well above your weight.`,
-      starter: `Act as a senior DTC marketing strategist with experience launching innovative physical products into competitive lifestyle markets. I am Head of Marketing at Velour Studio, a 28-person premium sustainable activewear brand. We are launching a patented biometric sports bra — it tracks heart rate, recovery, and breathing without any external wearable — in 10 weeks. Our audience is 40,000 across Instagram and TikTok. Budget is modest. Our competitors (Lululemon, Gymshark) have far larger paid media budgets.
-
-Build me a complete launch strategy:
-1. A 10-week pre-launch timeline with key milestones, channel activations by week, and content themes for each phase (awareness → anticipation → launch)
-2. A waitlist strategy that creates genuine demand and social proof before launch day — include the sign-up page structure, the waitlist email sequence, and any early-access mechanics
-3. An influencer and creator strategy: how to identify the right micro and mid-tier creators, what to offer them, how to brief them so content feels authentic, and how to track their impact
-4. Three PR story angles that health, fitness, and technology journalists would genuinely want to cover — with suggested outlet targets for each
-5. A 7-day launch week content calendar across Instagram, TikTok, and email — specific post ideas, formats (video, carousel, story), and copy direction for each day
-
-Brand voice: intelligent, direct, empowering. Customer: 28–42 year old woman who trains seriously and is not easily impressed by hype.`
+      title: "Vendor Assessment",
+      company: "Informa InfoSec",
+      sector: "Risk & Compliance",
+      logo: "VA",
+      role: "Risk Analyst",
+      brief: "A new vendor has submitted their security questionnaire. You need to produce a risk summary with RAG (Red/Amber/Green) ratings for the procurement team before their review meeting.",
+      challenge: "Your prompt should ask AI to assess a vendor's security questionnaire and produce a RAG-rated risk summary. A strong prompt will define what each RAG rating means, which risk categories to assess, who the audience is, and the output format.",
+      starter: "Review this vendor security questionnaire and give me a risk summary."
     },
     {
-      title: "Organic traffic flatline — SEO strategy in crisis",
-      company: "Velour Studio",
-      sector: "DTC Activewear · 28 staff",
-      logo: "VS",
-      role: "Digital Marketing Manager",
-      brief: `<strong>Velour Studio</strong>'s organic search traffic has been completely flat for seven months, stuck at around 12,000 monthly visits. Paid social is getting more expensive every quarter. The blog has 80+ articles — but most get fewer than 30 visits per month, and the ones that do rank aren't converting.
-
-A candid content audit revealed an uncomfortable truth: almost everything published targets highly competitive generic keywords like "sustainable activewear" and "gym leggings" — territory where Velour can't compete with ASOS, Lululemon, and the major retailers who own those first-page results.
-
-The CEO has given you three months to show meaningful organic growth. If nothing moves, the budget gets reallocated to paid.`,
-      challenge: `Your prompt should ask AI to help you completely rethink Velour's SEO strategy — moving away from generic keywords toward intent-specific, conversion-oriented terms a specialist brand can actually win. It should cover keyword strategy, what to do with existing content, a new content brief framework, and a 12-week plan with measurable milestones.`,
-      starter: `Act as an expert SEO strategist and content director for a DTC e-commerce brand. I am Digital Marketing Manager at Velour Studio, a premium sustainable activewear brand. Our organic traffic is flat at 12,000 monthly visits for 7 months. We have 80+ blog articles most of which underperform. A content audit showed we've been targeting overly competitive generic keywords (e.g. "sustainable activewear", "gym leggings") where we're outgunned by large retailers. I have 3 months to show material growth.
-
-Please help me:
-1. Explain the shift in keyword strategy I need to make — what specific types of search intent and keyword structures should a specialist DTC brand like ours be targeting to win traffic we can realistically rank for?
-2. Identify 10 high-opportunity keyword clusters in the women's activewear and performance fitness space — balance search volume with achievable competition levels for a brand of our size
-3. Create an updated content brief template that forces every new article to: define its search intent clearly, specify exactly who it's for, link to a commercial outcome, and include an internal linking strategy
-4. Give me a framework for auditing our existing 80 articles — which categories should be updated and optimised, which should be consolidated, and which should be removed or redirected?
-5. Build a 12-week content calendar with 2 articles per week, mixing informational and commercial intent, targeting the clusters you've identified — include suggested titles, target keyword, and content angle for each
-
-I want content that actually converts visitors into customers, not just builds passive traffic.`
+      title: "Policy Gap Check",
+      company: "Informa InfoSec",
+      sector: "Risk & Compliance",
+      logo: "PG",
+      role: "Compliance Manager",
+      brief: "Your organisation's security policy is 18 months old. You need to identify what needs updating based on recent regulatory changes before the next audit cycle.",
+      challenge: "Your prompt should ask AI to review a security policy and flag gaps against recent regulatory changes. A strong prompt will specify which regulations matter, the policy's scope, what \"gap\" means in practice, and how to present the findings.",
+      starter: "Our security policy is 18 months old. What needs updating?"
     },
     {
-      title: "PR crisis — a viral bad review that's factually wrong",
-      company: "Harrow & Vale",
-      sector: "Premium Food & Beverage · 60 staff",
-      logo: "HV",
-      role: "Marketing Director",
-      brief: `<strong>Harrow & Vale</strong> is a well-regarded premium food brand stocked in M&S, Waitrose, and independent delis. Yesterday, a food blogger with 380,000 Instagram followers posted that one of your products contains an undisclosed allergen — a mislabelling allegation against a batch produced six months ago.
-
-The post has been shared 4,200 times in 18 hours. Your DMs are full of angry customers. Trading Standards have made initial enquiries. Two retail buyers have called. Your community manager is overwhelmed.
-
-The allegation is <em>factually incorrect</em>. The batch in question was correctly labelled and the recipe was updated before that product ever reached shelves. But the truth is spreading slower than the story — and every hour you wait makes it worse.`,
-      challenge: `Your prompt should ask AI to help you manage this crisis across multiple channels and audiences simultaneously: a public statement, customer DM templates, retail partner communications, media responses, and a 30-day reputation repair plan. You need to correct the record credibly without escalating the conflict or appearing defensive.`,
-      starter: `Act as a crisis communications and brand reputation expert with experience in the food and FMCG sector. I am Marketing Director at Harrow & Vale, a premium food brand sold in Waitrose and M&S. We are 18 hours into a social media crisis: a food blogger with 380,000 followers has posted claiming one of our products contains an undisclosed allergen due to mislabelling. The claim is factually incorrect — the batch was correctly labelled and the recipe update happened before the product reached shelves. The post has been shared 4,200 times. Trading Standards have made enquiries. Retail buyers are calling.
-
-I need an urgent multi-channel response plan:
-1. A public Instagram and website statement that corrects the factual inaccuracy clearly, is empathetic without being defensive, and positions us as a brand that takes food safety seriously — to be posted within 2 hours
-2. Template responses for three types of DMs/comments: genuinely worried customers, people sharing the post without checking facts, and aggressive commenters
-3. A communication sequence for our retail partners (M&S, Waitrose, independent buyers) — what to say, at what level, and in what order over the next 48 hours
-4. A holding statement for media enquiries that manages the story without pouring fuel on it
-5. A 30-day reputation repair plan — how do we rebuild trust, demonstrate transparency, and convert this crisis into a demonstration of who we are as a brand?
-
-Tone must be calm, credible, and authoritative. We do not want to attack the blogger or appear to be dismissing real consumer concern.`
-    },
-    {
-      title: "Entering a new market with no brand recognition",
-      company: "Harrow & Vale",
-      sector: "Premium Food & Beverage · 60 staff",
-      logo: "HV",
-      role: "Head of Marketing",
-      brief: `<strong>Harrow & Vale</strong> is trusted and well-known in the UK premium grocery market — but the board has approved international expansion into Germany. The MD flies to a trade expo in Berlin in six months. The brief is simple and terrifying: <em>"Establish the brand in Germany before then."</em>
-
-You have a modest budget, no local team, no agency on retainer, and a fundamental knowledge gap — you don't know how German consumers discover, evaluate, or trust new food brands. You also know that Germany has fierce domestic food loyalty, a sophisticated premium grocery culture, and established competitors who've been there for decades.
-
-Simply translating the UK playbook and hoping for the best is not a strategy.`,
-      challenge: `Your prompt should ask AI to help you build a genuine market entry strategy for Germany — one that acknowledges the differences in consumer behaviour, channel landscape, and brand trust-building compared to the UK. It should give you a phased 6-month plan and specific tactics, not generic international marketing advice.`,
-      starter: `Act as an international brand strategist with specific expertise in the German consumer market and premium food sector. I am Head of Marketing at Harrow & Vale, a UK premium food brand sold in Waitrose and M&S. The board has approved expansion into Germany. I have 6 months, a modest budget, no local team or agency, and zero brand recognition in the German market. The MD has a trade expo in Berlin in month 6.
-
-I need a realistic market entry strategy — not a generic international marketing framework. Please be specific to Germany:
-1. Give me an honest overview of how German premium food consumers differ from British ones — what drives their purchasing decisions, how they build trust in new brands, and the most common mistakes British food brands make entering Germany
-2. Recommend which retail and route-to-market channels to prioritise first given limited budget — specialist food retailers, direct-to-consumer, food service, or marketplace — and the logic behind the recommendation
-3. What brand and packaging localisation is genuinely necessary vs. what we can keep consistent — including language, naming, visual identity, and messaging tone?
-4. Recommend 4–5 specific partnership or PR tactics native to the German market (food media outlets, relevant trade shows, buyer introduction routes) that could accelerate credibility on a small budget
-5. Give me a phased 6-month go-to-market timeline with clear monthly milestones that builds toward a meaningful presence at the Berlin trade expo
-
-I want actionable intelligence about Germany, not a framework that could apply to any country.`
+      title: "Incident Report",
+      company: "Informa InfoSec",
+      sector: "Risk & Compliance",
+      logo: "IR",
+      role: "Security Operations Lead",
+      brief: "An overnight security incident occurred. You need to write a structured report for the CISO from the response team's chat log before the 9am briefing.",
+      challenge: "Your prompt should ask AI to turn a response team's chat log into a structured incident report for a CISO. A strong prompt will define the report structure, what the CISO needs to know, the level of technical detail, and any compliance or regulatory requirements.",
+      starter: "Write an incident report from the response team's chat log."
     }
   ],
-
+  reporting: [
+    {
+      title: "Board Summary",
+      company: "Informa InfoSec",
+      sector: "Reporting",
+      logo: "BS",
+      role: "Security Reporting Lead",
+      brief: "You need to prepare a monthly security dashboard summary for the board from raw monitoring data. The board meets on Friday and expects a clear, non-technical overview.",
+      challenge: "Your prompt should ask AI to produce a board-ready security summary from raw monitoring data. A strong prompt will specify the audience (non-technical board), the metrics that matter, the format and length, and the tone expected.",
+      starter: "Prepare a monthly security dashboard summary for the board."
+    },
+    {
+      title: "Meeting Actions",
+      company: "Informa InfoSec",
+      sector: "Reporting",
+      logo: "MA",
+      role: "Project Manager",
+      brief: "You have a transcript from a 90-minute project meeting. You need to extract decisions, actions, owners, and deadlines before the follow-up email goes out this afternoon.",
+      challenge: "Your prompt should ask AI to extract structured action items from a meeting transcript. A strong prompt will define exactly what to extract (decisions, actions, owners, deadlines), the output format, and how to handle ambiguous or unclear items.",
+      starter: "Extract the actions from this meeting transcript."
+    },
+    {
+      title: "Status Update",
+      company: "Informa InfoSec",
+      sector: "Reporting",
+      logo: "SU",
+      role: "Compliance Manager",
+      brief: "You need to write a quarterly compliance update showing progress, overdue items, and concerns. This goes to the leadership team and needs to be clear and honest.",
+      challenge: "Your prompt should ask AI to write a quarterly compliance status update. A strong prompt will specify the audience, what categories to cover (progress, overdue, concerns), the data source, the tone, and any formatting requirements.",
+      starter: "Write a quarterly compliance update."
+    }
+  ],
   operations: [
     {
-      title: "Rapid growth is breaking the business",
-      company: "Fulcrum Logistics",
-      sector: "Third-Party Logistics · 95 staff",
-      logo: "FL",
-      role: "Operations Director",
-      brief: `<strong>Fulcrum Logistics</strong> grew 60% last year. On paper, brilliant. In practice, processes built for a 40-person business are now being run by 95 people — and the seams are showing everywhere.
-
-Customer errors are up 22%. Three experienced warehouse supervisors have resigned in 8 weeks. New starters aren't reaching full productivity until week six when it should be week two. The business is still largely running on spreadsheets, WhatsApp groups, and collective memory. Nobody has written anything down properly since 2021.
-
-The MD wants a transformation plan on her desk within a month. You have good people and a supportive board — but you've never done anything at this scale before, and you're not sure where to start.`,
-      challenge: `Your prompt should ask AI to help you build a practical operational transformation roadmap — covering process prioritisation, systems evaluation, the supervisor retention problem, onboarding redesign, and how to present a credible plan to the MD. It should be structured so you can actually execute it, not just talk about it.`,
-      starter: `Act as an operations transformation consultant specialising in scaling logistics businesses. I am Operations Director at Fulcrum Logistics, a 95-person third-party logistics company that grew 60% last year. The growth has exposed serious operational weaknesses: customer errors up 22%, three experienced supervisors resigned in 8 weeks, new starters taking 6 weeks to reach productivity, and the business running on spreadsheets and WhatsApp. The MD wants a transformation plan within a month.
-
-Please help me build it:
-1. A framework for mapping and prioritising our 10 most critical operational processes — scored by error frequency, business impact, and fix complexity, so I know what to tackle first
-2. An approach to evaluating Warehouse Management Systems (WMS) for a business at our growth stage — what capabilities matter most, what questions to ask vendors, and what to avoid
-3. A root cause analysis framework for the supervisor resignations — what are the most common drivers of mid-level manager attrition in fast-growing logistics businesses, and what should I be asking in exit interviews?
-4. A redesigned onboarding programme for operational staff — day-by-day for week one, then weekly milestones through to week four, with clear productivity markers at each stage
-5. A one-page transformation roadmap structured as: 30-day stabilise, 60-day improve, 90-day optimise — written in a way I can present to the MD with confidence
-
-Be specific and practical. I need to make visible progress in the next 30 days without losing the momentum that got us here.`
+      title: "Knowledge Article",
+      company: "Informa InfoSec",
+      sector: "Operations",
+      logo: "KA",
+      role: "IT Operations Analyst",
+      brief: "You need to write a step-by-step guide for requesting system access. It should be clear enough that anyone in the organisation can follow it without asking for help.",
+      challenge: "Your prompt should ask AI to write a knowledge base article for requesting system access. A strong prompt will define the audience (non-technical staff), the system or process involved, the format (step-by-step), and any constraints on length or language.",
+      starter: "Write a guide for requesting system access."
     },
     {
-      title: "The business can't afford to lose this person",
-      company: "Fulcrum Logistics",
-      sector: "Third-Party Logistics · 95 staff",
-      logo: "FL",
-      role: "Managing Director",
-      brief: `There's one person at <strong>Fulcrum Logistics</strong> who keeps you up at night — your Operations Manager, Dave Pearce. Dave has been with the business for 11 years. He knows every client quirk, every carrier relationship, every workaround in your systems. He is entirely brilliant and almost entirely irreplaceable.
-
-That's the problem. You've built a £6 million revenue business with a single point of failure — and at the Christmas party, his wife mentioned to someone that they're thinking of relocating abroad. You've done nothing about it since, which you know was a mistake.
-
-Dave isn't under threat. He's valued, well-paid, and genuinely happy. But if he left next month — for any reason — the business would be in serious difficulty for at least a year.`,
-      challenge: `Your prompt should ask AI to help you tackle key-person dependency in a way that's sensitive and strategic — covering knowledge capture without making Dave feel managed out, role redesign that makes his position more attractive to stay in, succession planning, and how to have the conversation with Dave in a way that actually motivates him rather than worrying him.`,
-      starter: `Act as an organisational design and business risk consultant. I am Managing Director of Fulcrum Logistics, a 95-person logistics business. My Operations Manager of 11 years holds almost all operational knowledge, carrier relationships, and client-specific processes in his head. He is genuinely valued and not at risk of being pushed out — but if he left for any reason, the business would struggle significantly. I need to reduce this key-person dependency without making him feel undervalued or concerned about his position.
-
-Please help me:
-1. Design a knowledge capture programme — what structured methods work best for extracting and documenting tacit knowledge from a long-tenured expert in a way that doesn't feel like an exit interview?
-2. Suggest how to redesign the Operations Manager role so it evolves into something more senior and strategic — redistributing day-to-day operational knowledge naturally while making the role more attractive to stay in
-3. Write a framework for the conversation I need to have with Dave — framing knowledge sharing and team development as evidence of his growing leadership, not a threat to his position
-4. Define what a succession plan should look like for this role — profile, experience, development path for an internal deputy or external hire
-5. Give me a realistic 6-month timeline to move from critical key-person risk to manageable — with specific milestones and checkpoints
-
-This needs to be handled with genuine care. Dave is a good person and a great manager. I want him to stay and thrive, not feel managed out.`
+      title: "New Starter Checklist",
+      company: "Informa InfoSec",
+      sector: "Operations",
+      logo: "NS",
+      role: "Security Operations Manager",
+      brief: "A new analyst is joining the security operations team next Monday. You need to create a first-week onboarding checklist covering tools, access, reading, and introductions.",
+      challenge: "Your prompt should ask AI to create an onboarding checklist for a new security operations team member. A strong prompt will specify the role, the team context, what categories the checklist should cover, and the format.",
+      starter: "Create an onboarding checklist for a new starter on the security team."
     },
     {
-      title: "Remote team is drifting — culture and output both suffering",
-      company: "Calibre Digital",
-      sector: "Digital Agency · 34 staff",
-      logo: "CD",
-      role: "Head of Operations",
-      brief: `<strong>Calibre Digital</strong> went fully remote in 2020 and for the first two years it worked well. But something has shifted. The team has grown to 34 people across six time zones, most of whom have never met in person. Collaboration has become transactional. Creative work feels increasingly siloed. Three of the best people have mentioned in 1:1s that they feel disconnected from the company's purpose.
-
-Engagement scores have dropped 14 points since last year's survey. Two mid-level roles have been hard to fill because candidates are choosing companies with a stronger culture narrative. The standard remote-team playbook has been tried — virtual coffees, Slack channels, a team quiz that everyone found painful. None of it has moved the dial.
-
-This needs a serious answer, not another activity.`,
-      challenge: `Your prompt should ask AI to help you rebuild culture in a genuinely distributed team in a way that's substantive and scalable — covering communication structure, async working norms, recognition, in-person strategy, and how to tell the team honestly that you know something has gone wrong and you're fixing it.`,
-      starter: `Act as an expert in distributed team culture and remote organisational design. I am Head of Operations at Calibre Digital, a 34-person fully remote digital agency across 6 time zones. We have been remote since 2020. Culture has eroded significantly: collaboration is transactional, engagement scores dropped 14 points in the last survey, 3 strong employees feel disconnected from the company purpose, and we're struggling to hire into mid-level roles because candidates question our culture. Standard remote culture tactics (virtual coffees, Slack channels, quizzes) have not worked.
-
-I need substance, not a perks list. Please help me:
-1. Diagnose the most likely structural root causes of culture erosion in a remote team that has grown significantly since going distributed — what are we probably missing at an organisational design level?
-2. Design a communication architecture for 34 people across 6 time zones — covering which tools for what, meeting cadence, async-first norms, and how decisions get made and communicated transparently
-3. Create a practical recognition and belonging programme that works across time zones without feeling performative — how do we make people feel genuinely seen?
-4. Develop an in-person strategy — given budget constraints, what frequency and format of team gatherings creates the most cultural ROI? What should the structure of those days look like?
-5. Write a short internal narrative I can share with the team that honestly acknowledges the culture drift, takes responsibility, and sets out a credible plan — without corporate language or hollow promises
-
-These are smart, experienced people. They'll see through anything that isn't genuine.`
-    },
-    {
-      title: "Complaints handling is damaging client relationships",
-      company: "Calibre Digital",
-      sector: "Digital Agency · 34 staff",
-      logo: "CD",
-      role: "Client Services Director",
-      brief: `<strong>Calibre Digital</strong> does excellent creative work — but when something goes wrong, the way it gets handled is causing more damage than the original problem. There's no formal complaints process. Junior account managers deal with client frustration in real time, with no script, no escalation path, and no authority to offer anything.
-
-Two client contracts ended early last quarter — not because the work was bad, but because how the complaints were handled made clients feel unimportant. In one case, a client said they felt they were "being managed rather than listened to."
-
-You've just taken over as Client Services Director. The CEO has given you three weeks to design and implement a complaints handling system from scratch. It needs to work for a 34-person creative agency — human and relationship-focused, not bureaucratic.`,
-      challenge: `Your prompt should ask AI to help you design a complete complaints handling system — covering the end-to-end process, escalation triggers, what authority account managers should have, training for difficult conversations, and a feedback loop that stops the same problems recurring.`,
-      starter: `Act as a client experience and service design consultant. I am Client Services Director at Calibre Digital, a 34-person digital agency. I have 3 weeks to design and implement a complaints handling process from scratch. Currently there is no formal process — junior account managers handle complaints ad hoc with no authority, no guidance, and no escalation path. Two clients ended contracts early last quarter partly because the complaints handling was poor.
-
-Please help me build a complete system:
-1. Map the end-to-end complaints process from the first signal of dissatisfaction through to resolution and follow-up — who handles each stage, what the response time targets are at each handoff, and what good resolution looks like
-2. Define clear escalation triggers — what situations require immediate senior involvement, and what can account managers handle independently with the right tools and confidence?
-3. Create a resolution authority framework — what can account managers offer unilaterally (e.g. time credits, revised timelines, deliverable additions) vs. what needs director sign-off?
-4. Write a training guide for account managers covering how to handle a difficult client conversation: active listening in practice, de-escalation language, what to say and what never to say, and how to move from tension to resolution
-5. Design a closed-loop feedback mechanism so every complaint generates a learning — what does the post-resolution debrief look like, how do we track complaint trends, and how do we feed insights back to service delivery to prevent recurrence?
-
-This process needs to feel human and relationship-driven. We're a creative agency and clients chose us partly because we're not like a corporate supplier.`
-    }
-  ],
-
-  finance: [
-    {
-      title: "Presenting bad half-year results to a tough board",
-      company: "Meridian Capital Group",
-      sector: "Private Equity · 22 staff",
-      logo: "MC",
-      role: "Chief Financial Officer",
-      brief: `<strong>Meridian Capital Group</strong> has had a difficult six months. A key portfolio company underperformed significantly. Two late-stage pipeline deals fell through — one on due diligence, one on valuation gap. Management fees are under pressure from two LPs who are asking harder questions at quarterly calls.
-
-You're presenting H1 results to the board in four days. The headline numbers miss every target. You have two board members who are forensically sharp and not afraid to ask questions that sting. One of them sent you an email last week with three specific questions about the portfolio company — which tells you he's already done his own analysis.
-
-You need to walk into that room owning the numbers, not apologising for them.`,
-      challenge: `Your prompt should ask AI to help you structure a credible board presentation narrative, prepare for the toughest questions, and close the meeting with the board's confidence in your judgment restored — not just their awareness of the problems. The tone should be accountable and forward-looking, not defensive.`,
-      starter: `Act as a financial communications advisor and board presentation strategist with private equity experience. I am CFO at Meridian Capital Group, a 22-person private equity firm. I am presenting H1 results to the board in 4 days. Every KPI is below target: portfolio company returns down 18% on plan, two late-stage pipeline deals fell through, and LP management fee pressure is increasing. Two board members are commercially sharp — one has already sent analytical questions about the portfolio company performance, signalling he's done his own analysis.
-
-Please help me:
-1. Structure a board-ready narrative — 10 minutes maximum — that acknowledges the underperformance honestly, identifies specific root causes without making excuses, and presents a credible H2 recovery thesis that the board can believe in
-2. Prepare me for the 6 most likely aggressive questions — including: "Why didn't you see this coming?", "What confidence do you have in the recovery plan?", "Should we be revising LP communications?", and "What would you do differently?"
-3. Advise on how to handle the LP pressure situation — should I get ahead of it proactively in the presentation, or wait to see if it's raised?
-4. Create a one-page financial summary that tells the story clearly — honest about the miss, clear on the drivers, specific on what we're doing about it
-5. Write a closing statement for the meeting that signals I have a firm grip on the situation and a credible path forward — without sounding like I'm trying to reassure people who aren't yet reassured
-
-I want the board to leave the room with confidence in my judgment, not just awareness of the problems.`
-    },
-    {
-      title: "Cut £800k of cost without making anyone redundant",
-      company: "Meridian Capital Group",
-      sector: "Private Equity · 22 staff",
-      logo: "MC",
-      role: "Finance Director (Portfolio)",
-      brief: `One of <strong>Meridian Capital Group</strong>'s portfolio companies — a 110-person manufacturing business — is burning through cash faster than forecast. EBITDA has slipped from a target of £4.2m to a current estimate of £2.8m. The business needs to reduce its annualised cost base by <em>£800,000</em> within the current financial year.
-
-The constraint: no redundancies. A banking covenant explicitly prohibits headcount reduction events. So the standard lever isn't available.
-
-You've been brought in as Finance Director to lead the cost reduction programme. You have access to the full P&L, six cooperative department heads, and six weeks before the bank review. The challenge is finding £800k of real savings that don't damage quality, hollow out team morale, or cripple the business's ability to grow when conditions improve.`,
-      challenge: `Your prompt should ask AI to help you identify and prioritise cost savings across a manufacturing P&L — direct costs, overheads, procurement, discretionary spend — build a communication and change management plan that keeps department heads engaged as partners rather than targets, and prepare what you'll present to the bank.`,
-      starter: `Act as a cost transformation specialist with experience in manufacturing businesses and private equity portfolio work. I am Finance Director engaged by Meridian Capital Group on a portfolio company — a 110-person manufacturing business. I need to reduce the annualised cost base by £800,000 within the current financial year. No redundancies are permitted due to a banking covenant. EBITDA has slipped from £4.2m target to £2.8m. I have 6 weeks before a bank review and 6 cooperative department heads.
-
-Please help me:
-1. Build a cost reduction diagnostic framework broken into: direct manufacturing costs, indirect overheads, procurement and supplier costs, discretionary and project spend, and people costs excluding headcount reduction — with specific cost reduction levers for each category
-2. Identify the 10 most common areas where manufacturing businesses of 100–120 people typically find material savings quickly — with realistic savings ranges so I can model the opportunity
-3. Create a prioritisation matrix to assess each saving opportunity by: size of saving, speed to implement, risk to quality or customer relationships, and operational disruption — so I can sequence the programme logically
-4. Design an internal communication and change management strategy — how do I engage department heads as genuine partners in finding savings rather than having cuts imposed on them? How do I communicate to the wider team without causing anxiety?
-5. Draft a one-page cost reduction plan summary for the bank review — covering identified savings by category, implementation timeline, monitoring approach, and updated EBITDA bridge
-
-I need to be both rigorous and creative. The easy cuts were made 18 months ago. We need to go deeper without damaging what makes this business good.`
-    },
-    {
-      title: "87 days overdue — and the client is going quiet",
-      company: "Thornbridge Accountants",
-      sector: "Professional Services · 18 staff",
-      logo: "TA",
-      role: "Practice Manager",
-      brief: `<strong>Thornbridge Accountants</strong> has a problem it's been handling too gently. A client — a small property development business — owes £34,000 in professional fees. The invoice is 87 days overdue.
-
-Every reminder has been met with friendly deflection: "Cash is tight right now," "We're expecting a completion next month," "Can we talk about a payment plan?" Three weeks ago, you found out through a mutual contact that the same client had just fitted out new offices and paid for a team away day.
-
-The founding partner wants resolution within 10 days — either payment, a signed payment plan, or formal escalation. You've been putting off making the call because you don't know exactly what to say.`,
-      challenge: `Your prompt should ask AI to help you build a firm, professional escalation sequence — a letter before action, a phone call script, and guidance on whether to accept a payment plan and what terms are reasonable. It should also help you think through what happens if they don't respond, and how to handle the relationship throughout.`,
-      starter: `Act as a credit control specialist and professional services business advisor. I am Practice Manager at Thornbridge Accountants, an 18-person accountancy practice. A client owes £34,000 in fees — now 87 days overdue. Previous reminders have been met with cash flow excuses, but we have reason to believe the business is not genuinely insolvent. The founding partner wants resolution within 10 days: full payment, a signed payment plan, or formal escalation.
-
-Please help me:
-1. Write a formal letter before action email — firm, professional, and legally appropriate — giving the client 7 days to either pay in full, propose a payment plan, or receive a formal debt recovery notice
-2. Write a script for the phone call I need to make before sending the letter — how do I open, what tone do I take, how do I handle the three most likely deflection tactics ("we're expecting a payment", "can you wait another month", "we're valued clients"), and when do I make clear this is now serious?
-3. Help me decide whether to accept a payment plan — if so, what terms are reasonable for a debt of this size, and what protections should be in place (written acknowledgement, interest, default clause)?
-4. Outline my options if they don't respond within 7 days — debt collection agency vs statutory demand vs small claims court for this amount — with a recommendation
-5. Advise how to handle the ongoing client relationship during escalation — do I continue providing services, pause work, or formally terminate the engagement? What are the professional and commercial considerations?
-
-The goal is payment, not litigation — but I need to signal this time that I mean it.`
-    },
-    {
-      title: "Build a business case for £18k software investment",
-      company: "Thornbridge Accountants",
-      sector: "Professional Services · 18 staff",
-      logo: "TA",
-      role: "Operations & Finance Manager",
-      brief: `<strong>Thornbridge Accountants</strong> is running its practice management on a combination of Sage, Excel, and a legacy time-tracking system last updated in 2017. Everyone in the firm knows it's a problem. Jobs fall through the cracks. Billing runs two to three weeks behind where it should. The team estimates they spend around four hours each per week on manual data entry that a modern system would handle automatically.
-
-You've researched the market and identified <em>Karbon</em> — a cloud-based practice management platform — as the clear best-fit solution. Annual cost: £18,000. But the founding partner who controls the budget is instinctively cautious about technology spending. He's been burned before. He'll want a watertight case before he signs off anything.
-
-You have two weeks to build it.`,
-      challenge: `Your prompt should ask AI to help you build a compelling, numbers-led business case — covering ROI calculation, the strongest non-financial arguments, responses to the objections you'll definitely hear, a realistic implementation plan, and an executive summary you can put in front of the founding partner as a standalone document.`,
-      starter: `Act as a business analyst and financial justification specialist. I am Operations and Finance Manager at Thornbridge Accountants, an 18-person accountancy practice. I want to invest in Karbon, a cloud-based practice management platform, at £18,000 per year. This replaces a fragmented mix of Sage, Excel, and a legacy time-tracking system from 2017. The problems: approximately 4 hours per person per week on manual data entry, billing that runs 2–3 weeks behind, and jobs regularly falling through gaps in the current system. The audience is a founding partner who is cautious about technology spend and has been burned before.
-
-Please help me:
-1. Build the financial case — calculate the fully-loaded cost of our current inefficiency in staff time (18 people, assume blended cost of £35/hour), compare it to the £18,000 investment, and project a realistic payback period and 3-year ROI
-2. Identify the 5 strongest non-financial arguments — covering risk reduction (compliance, errors), client service quality, staff satisfaction and retention, and future scalability
-3. Prepare responses to the 4 objections I'm most likely to hear: "We've always managed fine", "What if implementation disrupts client work?", "£18k feels expensive for a firm our size", and "Let's wait until after the busy season"
-4. Create a realistic 12-week implementation plan that minimises disruption to ongoing client work — including data migration approach, training schedule, parallel running period, and success milestones
-5. Write a one-page executive summary I can put in front of the founding partner before our meeting — numbers-led, specific, and written for someone who doesn't respond well to enthusiasm without evidence
-
-No generic software marketing language. He'll see through it immediately.`
+      title: "Document a Process",
+      company: "Informa InfoSec",
+      sector: "Operations",
+      logo: "DP",
+      role: "Security Operations Analyst",
+      brief: "You run a weekly vulnerability scan review. You need to document the process so that anyone on the team could pick it up and run it without your help.",
+      challenge: "Your prompt should ask AI to document a recurring operational process. A strong prompt will specify who the document is for, the level of detail needed, the format, and any tools or systems involved in the process.",
+      starter: "Document the weekly vulnerability scan review process."
     }
   ]
+};
 
+const INDUSTRY_LABELS = {
+  event_production: "Event Production",
+  risk_compliance: "Risk & Compliance",
+  reporting: "Reporting",
+  operations: "Operations"
 };
 
 const RANKS = [
@@ -1305,162 +1008,139 @@ const RANKS = [
   { min:950, max:1000, name:"ELITE PROMPTER",   color:"#c8973a" },
 ];
 
-// ── SANITY CONFIG ────────────────────────────────────────────────────────
-const SANITY_PROJECT = 'xn0l2bp8';
-const SANITY_DATASET = 'production';
-const SANITY_TOKEN   = 'skcW6ZkjqZLizX1LqRUAGRVFARATB4d0yjRBAZMlmfTLuMhzB6zEUqyef1DIdoZc6GRRPV2vzTSNkg1Pet5iWQSL9kdX6t1sGM7CvL7hS0TddJdSiOQpls72URqxBDnwWD1kgvVuQvcR5GeZ3Fa6LAz9LlqIF5BGOx8WjFI1wHR5ysKHgvYi';
-const SANITY_API     = `https://${SANITY_PROJECT}.api.sanity.io/v2021-06-07`;
-
-let industry = 'sales';
+// ── SANITY CONFIG ────────────────────────────────────────
+let industry = 'event_production';
 let selIdx = null;
+let currentStep = 0;
 let currentScore = null;
 let scoreTimer = null;
 let refreshTimer = null;
 
-// ── STORAGE (Sanity backend) ─────────────────────────────────────────────
-async function initBoard() {
-  // Test connection
-  try {
-    const res = await fetch(
-      `${SANITY_API}/data/query/${SANITY_DATASET}?query=` + encodeURIComponent('count(*[_type=="score"])')
-    );
-    if (res.ok) return;
-  } catch(err) {
-    console.error('Sanity connection failed:', err);
-    showToast('Cloud board unavailable');
-  }
-}
+// ── LOCAL STORAGE BACKEND ────────────────────────────────
+const STORAGE_KEY = 'prompt_score_board';
 
-async function loadEntries() {
+function initBoard() { /* no-op, localStorage is always ready */ }
+
+function loadEntries() {
   try {
-    const query = encodeURIComponent('*[_type=="score"] | order(score desc) { name, score, rank, time }');
-    const res = await fetch(`${SANITY_API}/data/query/${SANITY_DATASET}?query=${query}`);
-    if (!res.ok) return [];
-    const data = await res.json();
-    return data.result || [];
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
   } catch { return []; }
 }
 
-async function saveEntry(entry) {
-  const doc = {
-    _type: 'score',
-    name: entry.name,
-    score: entry.score,
-    rank: entry.rank,
-    time: entry.time
-  };
-
-  const mutations = [{ create: doc }];
-
-  const res = await fetch(`${SANITY_API}/data/mutate/${SANITY_DATASET}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${SANITY_TOKEN}`
-    },
-    body: JSON.stringify({ mutations })
-  });
-
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Sanity save failed: ${err}`);
-  }
-  return await res.json();
+function saveEntry(entry) {
+  const entries = loadEntries();
+  entries.push(entry);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
 }
 
-async function clearAllEntries() {
-  const mutations = [{ delete: { query: '*[_type=="score"]' } }];
-  await fetch(`${SANITY_API}/data/mutate/${SANITY_DATASET}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${SANITY_TOKEN}`
-    },
-    body: JSON.stringify({ mutations })
-  });
+function clearAllEntries() {
+  localStorage.removeItem(STORAGE_KEY);
 }
 
-// ── HELPERS ────────────────────────────────────────────────────────────────
+// ── HELPERS ──────────────────────────────────────────────
 function getRank(s) { return RANKS.find(r => s >= r.min && s <= r.max) || RANKS[0]; }
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-// ── INDUSTRY / SCENARIO RENDER ─────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ── VIEW SWITCHING ───────────────────────────────────────
+function switchView(v) {
+  document.getElementById('viewEntry').classList.toggle('active', v === 'entry');
+  document.getElementById('viewBoard').classList.toggle('active', v === 'board');
+  document.getElementById('navEntry').classList.toggle('active', v === 'entry');
+  document.getElementById('navBoard').classList.toggle('active', v === 'board');
+
+  if (v === 'board') {
+    renderBoard();
+    clearInterval(refreshTimer);
+    refreshTimer = setInterval(renderBoard, 5000);
+  } else {
+    clearInterval(refreshTimer);
+  }
+}
+
+// ── STEP NAVIGATION ─────────────────────────────────────
+function goStep(n) {
+  currentStep = n;
+  document.querySelectorAll('.step-panel').forEach((el, i) => {
+    el.classList.toggle('active', i === n);
+  });
+  document.querySelectorAll('.step-dot').forEach((el, i) => {
+    el.classList.remove('active', 'done');
+    if (i < n) el.classList.add('done');
+    if (i === n) el.classList.add('active');
+  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── INDUSTRY TABS ────────────────────────────────────────
+function renderIndustryBar() {
+  const bar = document.getElementById('industryBar');
+  bar.innerHTML = Object.entries(INDUSTRY_LABELS).map(([key, label]) =>
+    `<button class="ind-btn${key === industry ? ' active' : ''}" data-ind="${key}" onclick="setIndustry('${key}')">${esc(label)}</button>`
+  ).join('');
+}
+
 function setIndustry(ind) {
   industry = ind;
   selIdx = null;
   document.querySelectorAll('.ind-btn').forEach(b => {
-    b.classList.toggle('active', b.textContent.toLowerCase().includes(ind));
+    b.classList.toggle('active', b.dataset.ind === ind);
   });
   renderScenarios();
-  hideBrief();
 }
 
+// ── SCENARIO LIST ────────────────────────────────────────
 function renderScenarios() {
   const list = document.getElementById('scList');
-  list.innerHTML = STARTERS[industry].map((s, i) => `
-    <button class="sc-row" id="scr_${i}" onclick="pickScenario(${i})">
+  list.innerHTML = SCENARIOS[industry].map((s, i) => `
+    <button class="sc-card" onclick="pickScenario(${i})">
       <div class="sc-num">0${i+1}</div>
       <div class="sc-info">
-        <div class="sc-company-role">${esc(s.role)} · ${esc(s.company)}</div>
+        <div class="sc-role">${esc(s.role)} &middot; ${esc(s.sector)}</div>
         <div class="sc-title">${esc(s.title)}</div>
       </div>
+      <div class="sc-arrow">&rsaquo;</div>
     </button>`).join('');
 }
 
 function pickScenario(i) {
   selIdx = i;
-  document.querySelectorAll('.sc-row').forEach((el, idx) => el.classList.toggle('active', idx === i));
-  showBrief(STARTERS[industry][i]);
+  const s = SCENARIOS[industry][i];
+  showBrief(s);
+  goStep(1);
 }
 
 function showBrief(s) {
-  document.getElementById('noPick').style.display = 'none';
-  const inner = document.getElementById('briefInner');
-  inner.style.display = 'flex';
+  document.getElementById('briefTop').innerHTML = `
+    <div class="co-logo">${esc(s.logo)}</div>
+    <div>
+      <div class="co-name">${esc(s.company)}</div>
+      <div class="co-sector">${esc(s.sector)}</div>
+    </div>`;
 
-  document.getElementById('briefContent').innerHTML = `
-    <div class="co-block">
-      <div class="co-logo">${esc(s.logo)}</div>
-      <div>
-        <div class="co-name">${esc(s.company)}</div>
-        <div class="co-sector">${esc(s.sector)}</div>
-      </div>
-    </div>
+  document.getElementById('briefBody').innerHTML = `
     <div class="role-badge">
       <span class="role-badge-label">Your role</span>
       <span class="role-badge-val">${esc(s.role)}</span>
     </div>
     <div class="brief-headline">${esc(s.title)}</div>
-    <div class="brief-body">${s.brief}</div>
+    <div class="brief-body">${esc(s.brief)}</div>
     <div class="challenge-box">
-      <div class="challenge-label">⚡ Your challenge</div>
+      <div class="challenge-label">YOUR CHALLENGE</div>
       <div class="challenge-text">${esc(s.challenge)}</div>
-    </div>
-  `;
+    </div>`;
 }
 
-function hideBrief() {
-  document.getElementById('noPick').style.display = '';
-  document.getElementById('briefInner').style.display = 'none';
-}
-
-function useStarter() {
-  if (selIdx === null) return;
-  const s = STARTERS[industry][selIdx];
-  document.getElementById('promptInput').value = s.starter;
-  currentScore = null;
-  document.getElementById('submitBtn').disabled = true;
-  clearTimeout(scoreTimer);
-  scoreTimer = setTimeout(scorePrompt, 500);
-  // On mobile, scroll to the editor
-  document.getElementById('promptInput').scrollIntoView({ behavior: 'smooth', block: 'center' });
-  document.getElementById('promptInput').focus();
-}
-
-// ── SCORING ────────────────────────────────────────────────────────────────
+// ── SCORING ENGINE ───────────────────────────────────────
 function scoreText(text) {
   const l = text.toLowerCase();
-  const words = text.trim().split(/\s+/).filter(w=>w).length;
+  const words = text.trim().split(/\s+/).filter(w => w).length;
 
   // Role (150)
   let role = 0;
@@ -1478,113 +1158,101 @@ function scoreText(text) {
 
   // Context (150)
   let ctx = 0;
-  const ch = ['because','in order to','the goal is','my business','my company','i am ','i\'m ','we are','we\'re','i run','i work','my audience','background','situation','currently','we need','i need','for my','to help'].filter(t=>l.includes(t)).length;
-  if (ch>=4) ctx=150; else if(ch===3) ctx=115; else if(ch===2) ctx=80; else if(ch===1) ctx=45; else if(words>=40) ctx=30;
+  const ch = ['because','in order to','the goal is','my business','my company','i am ','i\'m ','we are','we\'re','i run','i work','my audience','background','situation','currently','we need','i need','for my','to help'].filter(t => l.includes(t)).length;
+  if (ch >= 4) ctx = 150; else if (ch === 3) ctx = 115; else if (ch === 2) ctx = 80; else if (ch === 1) ctx = 45; else if (words >= 40) ctx = 30;
 
   // Audience (100)
   let aud = 0;
-  const ah = ['audience','reader','customer','client','beginner','expert','professional','business owner','manager','student','non-technical','technical','aimed at','for someone','for people','decision-maker'].filter(t=>l.includes(t)).length;
-  if (ah>=3) aud=100; else if(ah===2) aud=75; else if(ah===1) aud=45;
+  const ah = ['audience','reader','customer','client','beginner','expert','professional','business owner','manager','student','non-technical','technical','aimed at','for someone','for people','decision-maker'].filter(t => l.includes(t)).length;
+  if (ah >= 3) aud = 100; else if (ah === 2) aud = 75; else if (ah === 1) aud = 45;
 
   // Format (150)
   let fmt = 0;
-  const fh = ['bullet point','numbered','table','heading','paragraph','word','words','section','format','structure','step by step','brief','detailed','concise','comprehensive','short','long','one-page','list'].filter(t=>l.includes(t)).length;
-  if (fh>=3) fmt=150; else if(fh===2) fmt=110; else if(fh===1) fmt=65;
+  const fh = ['bullet point','numbered','table','heading','paragraph','word','words','section','format','structure','step by step','brief','detailed','concise','comprehensive','short','long','one-page','list'].filter(t => l.includes(t)).length;
+  if (fh >= 3) fmt = 150; else if (fh === 2) fmt = 110; else if (fh === 1) fmt = 65;
 
   // Tone (100)
   let tone = 0;
-  const th = ['tone','style','friendly','professional','formal','informal','casual','conversational','engaging','authoritative','empathetic','persuasive','direct','simple','plain','humorous','serious','warm','bold','confident','human'].filter(t=>l.includes(t)).length;
-  if (th>=3) tone=100; else if(th===2) tone=75; else if(th===1) tone=45;
+  const th = ['tone','style','friendly','professional','formal','informal','casual','conversational','engaging','authoritative','empathetic','persuasive','direct','simple','plain','humorous','serious','warm','bold','confident','human'].filter(t => l.includes(t)).length;
+  if (th >= 3) tone = 100; else if (th === 2) tone = 75; else if (th === 1) tone = 45;
 
   // Constraints (100)
   let con = 0;
-  const cnh = ['do not','don\'t','avoid','never','exclude','without','no more than','maximum','minimum','must not','should not','only include','limit','keep it','omit','refrain','no generic','be specific'].filter(t=>l.includes(t)).length;
-  if (cnh>=3) con=100; else if(cnh===2) con=75; else if(cnh===1) con=50;
+  const cnh = ['do not','don\'t','avoid','never','exclude','without','no more than','maximum','minimum','must not','should not','only include','limit','keep it','omit','refrain','no generic','be specific'].filter(t => l.includes(t)).length;
+  if (cnh >= 3) con = 100; else if (cnh === 2) con = 75; else if (cnh === 1) con = 50;
 
   // Examples (50)
   let ex = 0;
-  if (/for example|e\.g\.|such as|here.s an example|in the style of|example:/.test(l)) ex=50;
-  else if (text.includes('"') || text.includes('\u201c')) ex=30;
+  if (/for example|e\.g\.|such as|here.s an example|in the style of|example:/.test(l)) ex = 50;
+  else if (text.includes('"') || text.includes('\u201c')) ex = 30;
 
-  const total = Math.min(1000, role+task+ctx+aud+fmt+tone+con+ex);
+  const total = Math.min(1000, role + task + ctx + aud + fmt + tone + con + ex);
   return { role, task, ctx, aud, fmt, tone, con, ex, total };
 }
 
 function buildFeedback(s) {
   const fb = [];
 
-  // Role (150)
   if (s.role >= 150)
-    fb.push({ msg: "You clearly defined who the AI should be. This gives the response real authority and focus.", tip: null });
+    fb.push({ msg: "You clearly defined who the AI should be.", tip: null });
   else if (s.role >= 50)
-    fb.push({ msg: "You hinted at a role but it could be more specific.", tip: "Try opening with \"Act as a [specific role with experience]\", e.g. \"Act as a senior financial analyst with 15 years in retail banking.\"" });
+    fb.push({ msg: "You hinted at a role but it could be more specific.", tip: "Try: \"Act as a [specific role with experience]\"" });
   else
-    fb.push({ msg: "No role defined. The AI doesn't know who it should be.", tip: "Start with \"Act as a...\" and describe the expert you want answering. The more specific the role, the better the output." });
+    fb.push({ msg: "No role defined.", tip: "Start with \"Act as a...\" and describe the expert you want." });
 
-  // Task (200)
   if (s.task >= 200)
-    fb.push({ msg: "Clear, detailed task with strong action verbs and enough detail for the AI to work with.", tip: null });
+    fb.push({ msg: "Clear, detailed task with strong action verbs.", tip: null });
   else if (s.task >= 80)
-    fb.push({ msg: "You've given a task but it could be more detailed or specific.", tip: "Add more detail about exactly what you want. Break it into numbered sub-tasks if there are multiple parts. Use specific verbs like \"write\", \"analyse\", \"compare\", \"build\"." });
+    fb.push({ msg: "Task present but could be more detailed.", tip: "Add detail about exactly what you want. Use verbs like \"write\", \"analyse\", \"compare\"." });
   else
-    fb.push({ msg: "The task is vague or too short for the AI to deliver something useful.", tip: "Tell the AI exactly what to create. Be specific: what is the deliverable? How detailed should it be? What should it cover?" });
+    fb.push({ msg: "Task is vague or too short.", tip: "Tell the AI exactly what to create. What is the deliverable?" });
 
-  // Context (150)
   if (s.ctx >= 150)
-    fb.push({ msg: "Excellent context. You've given the AI real background to work with.", tip: null });
+    fb.push({ msg: "Excellent context provided.", tip: null });
   else if (s.ctx >= 45)
-    fb.push({ msg: "Some context provided, but more background would improve the response.", tip: "Add details like: your situation, your business, why you need this, what you've already tried, and any relevant constraints. Phrases like \"because...\", \"the goal is...\", \"my company...\" help." });
+    fb.push({ msg: "Some context, but more would help.", tip: "Add: your situation, why you need this, relevant constraints." });
   else
-    fb.push({ msg: "Very little context. The AI will fill in the gaps with generic assumptions.", tip: "Explain your situation. Who are you? What's the background? Why do you need this? The more the AI knows about your world, the more relevant its answer will be." });
+    fb.push({ msg: "Very little context.", tip: "Explain your situation. Who are you? Why do you need this?" });
 
-  // Audience (100)
   if (s.aud >= 100)
-    fb.push({ msg: "You've clearly defined who the output is for. This sharpens the tone and content.", tip: null });
+    fb.push({ msg: "Clear audience defined.", tip: null });
   else if (s.aud >= 45)
-    fb.push({ msg: "Audience is mentioned but could be more specific.", tip: "Be precise about who will read or use this, e.g. \"for a non-technical board of directors\" or \"aimed at small business owners with no marketing experience\"." });
+    fb.push({ msg: "Audience mentioned but could be more specific.", tip: "Be precise: \"for a non-technical board\" or \"aimed at developers\"." });
   else
-    fb.push({ msg: "No audience specified. The AI doesn't know who this is for.", tip: "Add who the output is aimed at: \"for beginners\", \"for my manager\", \"for technical developers\". This changes the language, depth, and assumptions in the response." });
+    fb.push({ msg: "No audience specified.", tip: "Add who this is for: \"for beginners\", \"for my manager\", etc." });
 
-  // Format (150)
   if (s.fmt >= 150)
-    fb.push({ msg: "Clear format instructions. The AI knows exactly how to structure its response.", tip: null });
+    fb.push({ msg: "Clear format instructions.", tip: null });
   else if (s.fmt >= 65)
-    fb.push({ msg: "Some format guidance, but more structure would help.", tip: "Tell the AI the format you want: bullet points, numbered steps, a table, headings, a one-page summary. Mention length too — e.g. \"keep it under 500 words\" or \"use short paragraphs\"." });
+    fb.push({ msg: "Some format guidance.", tip: "Specify: bullet points, table, numbered steps, word count." });
   else
-    fb.push({ msg: "No format specified. The AI will decide the structure for you.", tip: "Specify how you want the response structured: \"Use bullet points\", \"Create a table\", \"Write numbered steps\", \"Keep it to one paragraph\". Format instructions prevent walls of text." });
+    fb.push({ msg: "No format specified.", tip: "Tell the AI how to structure output: bullets, table, steps, etc." });
 
-  // Tone (100)
   if (s.tone >= 100)
-    fb.push({ msg: "Tone is well defined. The AI knows exactly how to sound.", tip: null });
+    fb.push({ msg: "Tone well defined.", tip: null });
   else if (s.tone >= 45)
-    fb.push({ msg: "You've hinted at tone, but being more explicit would help.", tip: "Add a clear tone direction: \"Use a professional but approachable tone\", \"Be direct and confident\", \"Write in a conversational style\". This stops the AI defaulting to generic corporate language." });
+    fb.push({ msg: "Tone hinted at.", tip: "Add: \"Use a professional but approachable tone.\"" });
   else
-    fb.push({ msg: "No tone specified. The AI will default to a neutral, generic voice.", tip: "Add what tone or style you want: professional, friendly, direct, persuasive, simple. For example: \"Tone should be confident and practical, not corporate or fluffy.\"" });
+    fb.push({ msg: "No tone specified.", tip: "Add tone: professional, friendly, direct, persuasive, simple." });
 
-  // Constraints (100)
   if (s.con >= 100)
-    fb.push({ msg: "Strong guardrails. You've told the AI what to avoid, which is just as important as what to include.", tip: null });
+    fb.push({ msg: "Strong constraints set.", tip: null });
   else if (s.con >= 50)
-    fb.push({ msg: "Some limits set, but more constraints would tighten the output.", tip: "Add what to avoid: \"Don't include generic advice\", \"Avoid jargon\", \"No more than 300 words\", \"Do not suggest paid tools\". Constraints stop the AI from going off-track." });
+    fb.push({ msg: "Some limits set.", tip: "Add what to avoid: \"Don't include generic advice\", \"No more than 300 words\"." });
   else
-    fb.push({ msg: "No constraints. The AI has no idea what to leave out.", tip: "Tell the AI what NOT to do: \"Don't be generic\", \"Avoid bullet points\", \"Do not exceed 200 words\", \"Exclude any mention of...\". Constraints are one of the most underused prompt techniques." });
+    fb.push({ msg: "No constraints.", tip: "Tell the AI what NOT to do: \"Don't be generic\", \"Avoid jargon\"." });
 
-  // Examples (50)
   if (s.ex >= 50)
-    fb.push({ msg: "You included examples or references, which anchors the AI's output to something concrete.", tip: null });
+    fb.push({ msg: "Examples included.", tip: null });
   else if (s.ex >= 30)
-    fb.push({ msg: "Slight reference to examples, but being more explicit would help.", tip: "Add a clear example: \"For example: [show what good looks like]\" or \"In the style of...\". Even one example dramatically improves output quality." });
+    fb.push({ msg: "Slight reference to examples.", tip: "Add: \"For example: [show what good looks like]\"" });
   else
-    fb.push({ msg: "No examples provided. Examples are the single best way to show the AI what you want.", tip: "Add \"For example...\" or \"Here's an example of what I mean:\" followed by a sample. You can also say \"In the style of...\" to reference a known format." });
+    fb.push({ msg: "No examples.", tip: "Add \"For example...\" or \"In the style of...\" to anchor the output." });
 
   return fb;
 }
 
-function scorePrompt(showFeedback) {
-  const text = document.getElementById('promptInput').value.trim();
-  if (!text) return;
-  const s = scoreText(text);
-  currentScore = s.total;
+function showScoreUI(s) {
   const rank = getRank(s.total);
 
   document.getElementById('scoreNum').textContent = s.total;
@@ -1607,75 +1275,98 @@ function scorePrompt(showFeedback) {
     return `<span class="pill ${lit}">${c.label} ${c.v}</span>`;
   }).join('');
 
-  // Build detailed feedback — only show on explicit score click
-  if (showFeedback) {
-    const fb = buildFeedback(s);
-    const panel = document.getElementById('feedbackPanel');
-    panel.innerHTML = crits.map((c, idx) => {
-      const pct = c.v / c.max;
-      const badge = pct >= 0.75 ? 'full' : pct > 0 ? 'partial' : 'empty';
-      const badgeLabel = pct >= 0.75 ? 'STRONG' : pct > 0 ? 'PARTIAL' : 'MISSING';
-      const f = fb[idx];
-      const tipHtml = f.tip ? `<div class="fb-tip">${f.tip}</div>` : '';
-      return `<div class="fb-row">
-        <div class="fb-badge ${badge}">${badgeLabel}<br>${c.v}/${c.max}</div>
-        <div class="fb-body">
-          <div class="fb-label">${c.label}</div>
-          <div class="fb-text">${f.msg}</div>
-          ${tipHtml}
-        </div>
-      </div>`;
-    }).join('');
-    panel.classList.add('shown');
-  }
+  // Build feedback
+  const fb = buildFeedback(s);
+  const panel = document.getElementById('feedbackPanel');
+  panel.innerHTML = crits.map((c, idx) => {
+    const pct = c.v / c.max;
+    const badge = pct >= 0.75 ? 'full' : pct > 0 ? 'partial' : 'empty';
+    const badgeLabel = pct >= 0.75 ? 'STRONG' : pct > 0 ? 'PARTIAL' : 'MISSING';
+    const f = fb[idx];
+    const tipHtml = f.tip ? `<div class="fb-tip">${f.tip}</div>` : '';
+    return `<div class="fb-row">
+      <div class="fb-badge ${badge}">${badgeLabel}<br>${c.v}/${c.max}</div>
+      <div class="fb-body">
+        <div class="fb-label">${c.label}</div>
+        <div class="fb-text">${f.msg}</div>
+        ${tipHtml}
+      </div>
+    </div>`;
+  }).join('');
 
   document.getElementById('scoreStrip').classList.add('shown');
-  document.getElementById('submitBtn').disabled = false;
+  panel.classList.add('shown');
 }
 
-async function submitScore() {
+// ── AUTO-SCORE ON TYPE ───────────────────────────────────
+function autoScore() {
+  const text = document.getElementById('promptInput').value.trim();
+  if (text.length < 20) return;
+  const s = scoreText(text);
+  currentScore = s.total;
+  showScoreUI(s);
+}
+
+// ── MAIN SCORE + POST ACTION ─────────────────────────────
+function handleScore() {
   const name = document.getElementById('nameInput').value.trim();
-  if (!name) { showToast('Enter your name first'); return; }
-  if (currentScore === null) { showToast('Score your prompt first'); return; }
-
-  const btn = document.getElementById('submitBtn');
-  btn.disabled = true; btn.textContent = 'POSTING...';
-
-  await boardReady;
-
-  try {
-    await saveEntry({ name, score: currentScore, rank: getRank(currentScore).name, time: Date.now() });
-
-    document.getElementById('promptCol').style.display = 'none';
-    document.getElementById('successPanel').classList.add('shown');
-    document.getElementById('sucScore').textContent = currentScore;
-    document.getElementById('sucScore').style.color = getRank(currentScore).color;
-    document.getElementById('sucRank').textContent = getRank(currentScore).name;
-    showToast('🏆 On the board!');
-  } catch(err) {
-    console.error('Submit failed:', err);
-    showToast('Failed to post — please try again');
-    btn.disabled = false; btn.textContent = '🏆 POST TO BOARD';
+  if (!name) {
+    showToast('Enter your name first');
+    document.getElementById('nameInput').focus();
+    return;
   }
+
+  const text = document.getElementById('promptInput').value.trim();
+  if (!text || text.length < 10) {
+    showToast('Write a prompt first');
+    document.getElementById('promptInput').focus();
+    return;
+  }
+
+  if (selIdx === null) {
+    showToast('Pick a scenario first');
+    return;
+  }
+
+  // Score it
+  const s = scoreText(text);
+  currentScore = s.total;
+  showScoreUI(s);
+
+  // Save to leaderboard
+  saveEntry({
+    name: name,
+    score: currentScore,
+    rank: getRank(currentScore).name,
+    time: Date.now()
+  });
+
+  // Show success
+  document.getElementById('sucScore').textContent = currentScore;
+  document.getElementById('sucScore').style.color = getRank(currentScore).color;
+  document.getElementById('sucRank').textContent = getRank(currentScore).name;
+  goStep(2);
+  showToast('You\'re on the board!');
 }
 
-function resetEntry() {
+function resetAndGoStart() {
   currentScore = null;
+  selIdx = null;
   document.getElementById('nameInput').value = '';
   document.getElementById('promptInput').value = '';
   document.getElementById('scoreStrip').classList.remove('shown');
   document.getElementById('feedbackPanel').classList.remove('shown');
-  document.getElementById('submitBtn').disabled = true;
-  document.getElementById('submitBtn').textContent = '🏆 POST TO BOARD';
-  document.getElementById('promptCol').style.display = '';
-  document.getElementById('successPanel').classList.remove('shown');
+  const btn = document.getElementById('scoreBtn');
+  btn.textContent = 'SCORE IT & POST TO BOARD';
+  btn.classList.remove('loading');
+  btn.disabled = false;
+  goStep(0);
 }
 
-// ── LEADERBOARD ────────────────────────────────────────────────────────────
-async function renderBoard() {
-  await boardReady;
-  const entries = await loadEntries();
-  const sorted = [...entries].sort((a,b)=>b.score-a.score);
+// ── LEADERBOARD ──────────────────────────────────────────
+function renderBoard() {
+  const entries = loadEntries();
+  const sorted = [...entries].sort((a, b) => b.score - a.score);
   const tbody = document.getElementById('boardBody');
   const empty = document.getElementById('emptyState');
 
@@ -1683,26 +1374,26 @@ async function renderBoard() {
   if (!sorted.length) {
     tbody.innerHTML = '';
     empty.style.display = 'block';
-    document.getElementById('stTop').textContent = '—';
-    document.getElementById('stAvg').textContent = '—';
+    document.getElementById('stTop').textContent = '\u2014';
+    document.getElementById('stAvg').textContent = '\u2014';
     return;
   }
 
   empty.style.display = 'none';
   document.getElementById('stTop').textContent = sorted[0].score;
-  document.getElementById('stAvg').textContent = Math.round(sorted.reduce((s,e)=>s+e.score,0)/sorted.length);
+  document.getElementById('stAvg').textContent = Math.round(sorted.reduce((s, e) => s + e.score, 0) / sorted.length);
 
-  tbody.innerHTML = sorted.slice(0,20).map((e,i)=>{
+  tbody.innerHTML = sorted.slice(0, 30).map((e, i) => {
     const rank = getRank(e.score);
-    const pct = Math.round((e.score/1000)*100);
-    const cls = i===0?'gold':i===1?'silver':i===2?'bronze':'';
-    const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1;
-    const time = new Date(e.time).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    const pct = Math.round((e.score / 1000) * 100);
+    const cls = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+    const medal = i === 0 ? '\uD83E\uDD47' : i === 1 ? '\uD83E\uDD48' : i === 2 ? '\uD83E\uDD49' : i + 1;
+    const time = new Date(e.time).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
     return `<tr class="b-row">
       <td class="b-rank ${cls}">${medal}</td>
       <td>
         <div class="b-name">${esc(e.name)}</div>
-        <div class="b-sub">${esc(e.rank)} · ${time}</div>
+        <div class="b-sub">${esc(e.rank)} \u00B7 ${time}</div>
         <div class="bar-wrap"><div class="bar-fill" style="width:${pct}%;background:${rank.color}"></div></div>
       </td>
       <td>
@@ -1713,26 +1404,11 @@ async function renderBoard() {
   }).join('');
 }
 
-async function clearBoard() {
+function clearBoard() {
   if (!confirm('Clear all scores from the leaderboard?')) return;
-  await clearAllEntries();
+  clearAllEntries();
   renderBoard();
   showToast('Board cleared');
-}
-
-// ── MODE SWITCH ────────────────────────────────────────────────────────────
-function setMode(m) {
-  ['entry','board'].forEach(v => {
-    document.getElementById('view'+v.charAt(0).toUpperCase()+v.slice(1)).classList.toggle('active', v===m);
-    document.getElementById('btn'+v.charAt(0).toUpperCase()+v.slice(1)).classList.toggle('active', v===m);
-  });
-  if (m==='board') {
-    renderBoard();
-    clearInterval(refreshTimer);
-    refreshTimer = setInterval(renderBoard, 5000);
-  } else {
-    clearInterval(refreshTimer);
-  }
 }
 
 function toggleFullscreen() {
@@ -1740,21 +1416,14 @@ function toggleFullscreen() {
   else document.exitFullscreen?.();
 }
 
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'), 2800);
-}
-
-// ── INIT ───────────────────────────────────────────────────────────────────
-let boardReady = initBoard();
+// ── INIT ─────────────────────────────────────────────────
+renderIndustryBar();
 renderScenarios();
 
-document.getElementById('promptInput').addEventListener('input', ()=>{
+// Auto-score as user types
+document.getElementById('promptInput').addEventListener('input', () => {
   clearTimeout(scoreTimer);
-  if (document.getElementById('promptInput').value.trim().length > 20)
-    scoreTimer = setTimeout(scorePrompt, 900);
+  scoreTimer = setTimeout(autoScore, 700);
 });
 </script>
 </body>
